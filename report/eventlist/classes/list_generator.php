@@ -197,7 +197,7 @@ class report_eventlist_list_generator {
                     if (method_exists($plugineventname, 'get_static_info')) {
                         if ($detail) {
                             $ref = new \ReflectionClass($plugineventname);
-                            if (!$ref->isAbstract() && $plugintype . '_' . $plugin !== 'logstore_legacy') {
+                            if (!$ref->isAbstract() && $plugin != 'legacy') {
                                 $noncorepluginlist = self::format_data($noncorepluginlist, $plugineventname);
                             }
                         } else {

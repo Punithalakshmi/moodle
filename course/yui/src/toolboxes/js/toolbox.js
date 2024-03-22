@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 /**
  * Resource and activity toolbox class.
  *
@@ -18,28 +17,31 @@ var CSS = {
         DIMCLASS : 'dimmed',
         DIMMEDTEXT : 'dimmed_text',
         EDITINSTRUCTIONS : 'editinstructions',
+        EDITINGTITLE: 'editor_displayed',
         HIDE : 'hide',
         MODINDENTCOUNT : 'mod-indent-',
         MODINDENTHUGE : 'mod-indent-huge',
         MODULEIDPREFIX : 'module-',
         SECTIONHIDDENCLASS : 'hidden',
         SECTIONIDPREFIX : 'section-',
-        SHOW : 'editing_show'
+        SHOW : 'editing_show',
+        TITLEEDITOR : 'titleeditor'
     },
     // The CSS selectors we use.
     SELECTOR = {
         ACTIONAREA: '.actions',
         ACTIONLINKTEXT : '.actionlinktext',
-        ACTIVITYACTION : 'a.cm-edit-action[data-action]',
+        ACTIVITYACTION : 'a.cm-edit-action[data-action], a.editing_title',
+        ACTIVITYFORM : '.' + CSS.ACTIVITYINSTANCE + ' form',
         ACTIVITYICON : 'img.activityicon',
         ACTIVITYINSTANCE : '.' + CSS.ACTIVITYINSTANCE,
-        ACTIVITYLINK: '.' + CSS.ACTIVITYINSTANCE + ' > a, .'+ CSS.ACTIVITYINSTANCE +
-            ' > span[data-inplaceeditable] > a:not([data-inplaceeditablelink])',
+        ACTIVITYLINK: '.' + CSS.ACTIVITYINSTANCE + ' > a',
         ACTIVITYLI : 'li.activity',
+        ACTIVITYTITLE : 'input[name=title]',
         COMMANDSPAN : '.commands',
         CONTENTAFTERLINK : 'div.contentafterlink',
         CONTENTWITHOUTLINK : 'div.contentwithoutlink',
-        GROUPINGLABEL: '.' + CSS.ACTIVITYINSTANCE + ' .groupinglabel',
+        EDITTITLE: 'a.editing_title',
         HIDE : 'a.editing_hide',
         HIGHLIGHT : 'a.editing_highlight',
         INSTANCENAME : 'span.instancename',
@@ -197,3 +199,4 @@ Y.extend(TOOLBOX, Y.Base, {
     }
 }
 );
+

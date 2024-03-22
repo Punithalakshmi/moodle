@@ -540,20 +540,20 @@ class core_media_player_youtube extends core_media_player_external {
         $params = '';
         $start = self::get_start_time($url);
         if ($start > 0) {
-            $params .= "start=$start&amp;";
+            $params .= "start=$start&";
         }
 
         $listid = $url->param('list');
         // Check for non-empty but valid playlist ID.
         if (!empty($listid) && !preg_match('/[^a-zA-Z0-9\-_]/', $listid)) {
             // This video is part of a playlist, and we want to embed it as such.
-            $params .= "list=$listid&amp;";
+            $params .= "list=$listid&";
         }
 
         return <<<OET
 <span class="mediaplugin mediaplugin_youtube">
 <iframe title="$info" width="$width" height="$height"
-  src="https://www.youtube.com/embed/$videoid?{$params}rel=0&amp;wmode=transparent" frameborder="0" allowfullscreen="1"></iframe>
+  src="https://www.youtube.com/embed/$videoid?{$params}rel=0&wmode=transparent" frameborder="0" allowfullscreen="1"></iframe>
 </span>
 OET;
 
@@ -1123,8 +1123,16 @@ OET;
                 // is a simplified version, does not take into account old browser
                 // versions or manual plugins.
                 if ($ext === 'ogv' || $ext === 'webm') {
-                    // Formats .ogv and .webm are not supported in IE, Edge or Safari.
-                    if (core_useragent::is_ie() || core_useragent::is_edge() || core_useragent::is_safari()) {
+                    // Formats .ogv and .webm are not supported in IE or Safari.
+                    if (core_useragent::is_ie() || core_useragent::is_safari()) {
+                        continue;
+                    }
+                } else {
+                    // Formats .m4v and .mp4 are not supported in Opera, or in Firefox before 27.
+                    // https://developer.mozilla.org/en-US/docs/Web/HTML/Supported_media_formats
+                    // has the details.
+                    if (core_useragent::is_opera() || (core_useragent::is_firefox() &&
+                            !core_useragent::check_firefox_version(27))) {
                         continue;
                     }
                 }
@@ -1177,7 +1185,7 @@ OET;
     }
 
     public function get_supported_extensions() {
-        return array('ogg', 'oga', 'aac', 'm4a', 'mp3', 'wav');
+        return array('ogg', 'oga', 'aac', 'm4a', 'mp3');
     }
 
     public function list_supported_urls(array $urls, array $options = array()) {
@@ -1187,13 +1195,20 @@ OET;
             $ext = core_media::get_extension($url);
             if (in_array($ext, $extensions)) {
                 if ($ext === 'ogg' || $ext === 'oga') {
-                    // Formats .ogg and .oga are not supported in IE, Edge, or Safari.
-                    if (core_useragent::is_ie() || core_useragent::is_edge() || core_useragent::is_safari()) {
+                    // Formats .ogg and .oga are not supported in IE or Safari.
+                    if (core_useragent::is_ie() || core_useragent::is_safari()) {
                         continue;
                     }
-                } else if ($ext === 'wav') {
-                    // Wave is not supported in IE.
-                    if (core_useragent::is_ie()) {
+                } else {
+                    // Formats .aac, .mp3, and .m4a are not supported in Opera.
+                    if (core_useragent::is_opera()) {
+                        continue;
+                    }
+                    // Formats .mp3 and .m4a were not reliably supported in Firefox before 27.
+                    // https://developer.mozilla.org/en-US/docs/Web/HTML/Supported_media_formats
+                    // has the details. .aac is still not supported.
+                    if (core_useragent::is_firefox() && ($ext === 'aac' ||
+                            !core_useragent::check_firefox_version(27))) {
                         continue;
                     }
                 }

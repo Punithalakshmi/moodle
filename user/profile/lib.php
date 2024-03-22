@@ -70,12 +70,9 @@ class profile_field_base {
     }
 
     /**
-     * Old syntax of class constructor. Deprecated in PHP7.
-     *
-     * @deprecated since Moodle 3.1
+     * Old syntax of class constructor for backward compatibility.
      */
     public function profile_field_base($fieldid=0, $userid=0) {
-        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
         self::__construct($fieldid, $userid);
     }
 
@@ -208,7 +205,7 @@ class profile_field_base {
      * @param  moodleform $mform instance of the moodleform class
      */
     public function edit_field_set_default($mform) {
-        if (!empty($this->field->defaultdata)) {
+        if (!empty($default)) {
             $mform->setDefault($this->inputname, $this->field->defaultdata);
         }
     }
@@ -561,10 +558,9 @@ function profile_signup_fields($mform) {
 /**
  * Returns an object with the custom profile fields set for the given user
  * @param integer $userid
- * @param bool $onlyinuserobject True if you only want the ones in $USER.
  * @return stdClass
  */
-function profile_user_record($userid, $onlyinuserobject = true) {
+function profile_user_record($userid) {
     global $CFG, $DB;
 
     $usercustomfields = new stdClass();
@@ -574,7 +570,7 @@ function profile_user_record($userid, $onlyinuserobject = true) {
             require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
             $newfield = 'profile_field_'.$field->datatype;
             $formfield = new $newfield($field->id, $userid);
-            if (!$onlyinuserobject || $formfield->is_user_object_data()) {
+            if ($formfield->is_user_object_data()) {
                 $usercustomfields->{$field->shortname} = $formfield->data;
             }
         }
@@ -662,30 +658,3 @@ function profile_view($user, $context, $course = null) {
     $event->trigger();
 }
 
-/**
- * Does the user have all required custom fields set?
- *
- * Internal, to be exclusively used by {@link user_not_fully_set_up()} only.
- *
- * Note that if users have no way to fill a required field via editing their
- * profiles (e.g. the field is not visible or it is locked), we still return true.
- * So this is actually checking if we should redirect the user to edit their
- * profile, rather than whether there is a value in the database.
- *
- * @param int $userid
- * @return bool
- */
-function profile_has_required_custom_fields_set($userid) {
-    global $DB;
-
-    $sql = "SELECT f.id
-              FROM {user_info_field} f
-         LEFT JOIN {user_info_data} d ON (d.fieldid = f.id AND d.userid = ?)
-             WHERE f.required = 1 AND f.visible > 0 AND f.locked = 0 AND d.id IS NULL";
-
-    if ($DB->record_exists_sql($sql, [$userid])) {
-        return false;
-    }
-
-    return true;
-}

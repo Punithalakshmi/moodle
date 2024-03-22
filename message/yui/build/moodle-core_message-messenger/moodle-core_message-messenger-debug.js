@@ -14,7 +14,6 @@ YUI.add('moodle-core_message-messenger', function (Y, NAME) {
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* eslint-disable no-unused-vars */
 
 /**
  * Messenger constants.
@@ -55,7 +54,6 @@ var SELECTORS = {};
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global SELECTORS */
 
 /**
  * Messenger manager.
@@ -199,7 +197,6 @@ Y.namespace('M.core_message.messenger').init = function(config) {
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global CSSR, SELECTORS */
 
 /**
  * Send message dialog.

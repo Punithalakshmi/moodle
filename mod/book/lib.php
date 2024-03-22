@@ -291,7 +291,7 @@ function book_supports($feature) {
  * @return void
  */
 function book_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $booknode) {
-    global $USER, $PAGE, $OUTPUT;
+    global $USER, $PAGE;
 
     $plugins = core_component::get_plugin_list('booktool');
     foreach ($plugins as $plugin => $dir) {
@@ -306,8 +306,7 @@ function book_extend_settings_navigation(settings_navigation $settingsnav, navig
 
     $params = $PAGE->url->params();
 
-    if ($PAGE->cm->modname === 'book' and !empty($params['id']) and !empty($params['chapterid'])
-            and has_capability('mod/book:edit', $PAGE->cm->context)) {
+    if (!empty($params['id']) and !empty($params['chapterid']) and has_capability('mod/book:edit', $PAGE->cm->context)) {
         if (!empty($USER->editing)) {
             $string = get_string("turneditingoff");
             $edit = '0';
@@ -317,7 +316,6 @@ function book_extend_settings_navigation(settings_navigation $settingsnav, navig
         }
         $url = new moodle_url('/mod/book/view.php', array('id'=>$params['id'], 'chapterid'=>$params['chapterid'], 'edit'=>$edit, 'sesskey'=>sesskey()));
         $booknode->add($string, $url, navigation_node::TYPE_SETTING);
-        $PAGE->set_button($OUTPUT->single_button($url, $string));
     }
 }
 
@@ -431,21 +429,8 @@ function book_pluginfile($course, $cm, $context, $filearea, $args, $forcedownloa
     if ($args[0] == 'index.html') {
         $filename = "index.html";
 
-        // We need to rewrite the pluginfile URLs so the media filters can work.
-        $content = file_rewrite_pluginfile_urls($chapter->content, 'webservice/pluginfile.php', $context->id, 'mod_book', 'chapter',
-                                                $chapter->id);
-        $formatoptions = new stdClass;
-        $formatoptions->noclean = true;
-        $formatoptions->overflowdiv = true;
-        $formatoptions->context = $context;
-
-        $content = format_text($content, $chapter->contentformat, $formatoptions);
-
         // Remove @@PLUGINFILE@@/.
-        $options = array('reverse' => true);
-        $content = file_rewrite_pluginfile_urls($content, 'webservice/pluginfile.php', $context->id, 'mod_book', 'chapter',
-                                                $chapter->id, $options);
-        $content = str_replace('@@PLUGINFILE@@/', '', $content);
+        $content = str_replace('@@PLUGINFILE@@/', '', $chapter->content);
 
         $titles = "";
         // Format the chapter titles.
@@ -466,7 +451,12 @@ function book_pluginfile($course, $cm, $context, $filearea, $args, $forcedownloa
             }
         }
 
-        $content = $titles . $content;
+        $formatoptions = new stdClass;
+        $formatoptions->noclean = true;
+        $formatoptions->overflowdiv = true;
+        $formatoptions->context = $context;
+
+        $content = $titles . format_text($content, $chapter->contentformat, $formatoptions);
 
         send_file($content, $filename, 0, 0, true, true);
     } else {
@@ -573,7 +563,7 @@ function book_export_contents($cm, $baseurl) {
             $file = array();
             $file['type']         = 'file';
             $file['filename']     = $fileinfo->get_filename();
-            $file['filepath']     = "/{$chapter->id}" . $fileinfo->get_filepath();
+            $file['filepath']     = "/{$chapter->id}/";
             $file['filesize']     = $fileinfo->get_filesize();
             $file['fileurl']      = moodle_url::make_webservice_pluginfile_url(
                                         $context->id, 'mod_book', 'chapter', $chapter->id,

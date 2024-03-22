@@ -33,8 +33,7 @@ $functions = array(
         'methodname'    => 'view_folder',
         'description'   => 'Simulate the view.php web interface folder: trigger events, completion, etc...',
         'type'          => 'write',
-        'capabilities'  => 'mod/folder:view',
-        'services'      => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
+        'capabilities'  => 'mod/folder:view'
     ),
 
 );

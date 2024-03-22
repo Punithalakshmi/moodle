@@ -170,11 +170,7 @@ if ($xml = glossary_read_imported_file($result)) {
         $xmlentry = $xmlentries[$i];
         $newentry = new stdClass();
         $newentry->concept = trim($xmlentry['#']['CONCEPT'][0]['#']);
-        $definition = $xmlentry['#']['DEFINITION'][0]['#'];
-        if (!is_string($definition)) {
-            print_error('errorparsingxml', 'glossary');
-        }
-        $newentry->definition = trusttext_strip($definition);
+        $newentry->definition = trusttext_strip($xmlentry['#']['DEFINITION'][0]['#']);
         if ( isset($xmlentry['#']['CASESENSITIVE'][0]['#']) ) {
             $newentry->casesensitive = $xmlentry['#']['CASESENSITIVE'][0]['#'];
         } else {

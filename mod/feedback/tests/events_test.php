@@ -218,7 +218,7 @@ class mod_feedback_events_testcase extends advanced_testcase {
 
         // Save the feedback.
         $sink = $this->redirectEvents();
-        $id = feedback_save_tmp_values($completed, false);
+        $id = feedback_save_tmp_values($completed, false, $USER->id);
         $events = $sink->get_events();
         $event = array_pop($events); // Response submitted feedback event.
         $sink->close();
@@ -257,14 +257,14 @@ class mod_feedback_events_testcase extends advanced_testcase {
 
         // Save the feedback.
         $sink = $this->redirectEvents();
-        feedback_save_tmp_values($completed, false);
+        feedback_save_tmp_values($completed, false, $USER->id);
         $events = $sink->get_events();
         $event = array_pop($events); // Response submitted feedback event.
         $sink->close();
 
         // Test legacy data.
         $arr = array($this->eventcourse->id, 'feedback', 'submit', 'view.php?id=' . $this->eventcm->id, $this->eventfeedback->id,
-                     $this->eventcm->id, $this->eventuser->id);
+                     $this->eventcm->id, $USER->id);
         $this->assertEventLegacyLogData($arr, $event);
 
         // Test can_view().

@@ -58,8 +58,7 @@ class lesson_page_type_endofbranch extends lesson_page {
 
     public function redirect_to_first_answer($canmanage) {
         global $USER, $PAGE;
-        $answers = $this->get_answers();
-        $answer = array_shift($answers);
+        $answer = array_shift($this->get_answers());
         $jumpto = $answer->jumpto;
         if ($jumpto == LESSON_RANDOMBRANCH) {
 

@@ -105,12 +105,9 @@ class MoodleQuickForm_date_selector extends MoodleQuickForm_group {
     }
 
     /**
-     * Old syntax of class constructor. Deprecated in PHP7.
-     *
-     * @deprecated since Moodle 3.1
+     * Old syntax of class constructor for backward compatibility.
      */
     public function MoodleQuickForm_date_selector($elementName = null, $elementLabel = null, $options = array(), $attributes = null) {
-        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
         self::__construct($elementName, $elementLabel, $options, $attributes);
     }
 
@@ -128,10 +125,6 @@ class MoodleQuickForm_date_selector extends MoodleQuickForm_group {
         $this->_elements = array();
 
         $dateformat = $calendartype->get_date_order($this->_options['startyear'], $this->_options['stopyear']);
-        // Reverse date element (Day, Month, Year), in RTL mode.
-        if (right_to_left()) {
-            $dateformat = array_reverse($dateformat);
-        }
         foreach ($dateformat as $key => $value) {
             // E_STRICT creating elements without forms is nasty because it internally uses $this
             $this->_elements[] = @MoodleQuickForm::createElement('select', $key, get_string($key, 'form'), $value, $this->getAttributes(), true);
@@ -266,6 +259,7 @@ class MoodleQuickForm_date_selector extends MoodleQuickForm_group {
      * @return array
      */
     function exportValue(&$submitValues, $assoc = false) {
+        $value = null;
         $valuearray = array();
         foreach ($this->_elements as $element){
             $thisexport = $element->exportValue($submitValues[$this->getName()], true);
@@ -277,20 +271,21 @@ class MoodleQuickForm_date_selector extends MoodleQuickForm_group {
             if($this->_options['optional']) {
                 // If checkbox is on, the value is zero, so go no further
                 if(empty($valuearray['enabled'])) {
-                    return $this->_prepareValue(0, $assoc);
+                    $value[$this->getName()] = 0;
+                    return $value;
                 }
             }
             // Get the calendar type used - see MDL-18375.
             $calendartype = \core_calendar\type_factory::get_calendar_instance();
             $gregoriandate = $calendartype->convert_to_gregorian($valuearray['year'], $valuearray['month'], $valuearray['day']);
-            $value = make_timestamp($gregoriandate['year'],
+            $value[$this->getName()] = make_timestamp($gregoriandate['year'],
                                                       $gregoriandate['month'],
                                                       $gregoriandate['day'],
                                                       0, 0, 0,
                                                       $this->_options['timezone'],
                                                       true);
 
-            return $this->_prepareValue($value, $assoc);
+            return $value;
         } else {
             return null;
         }

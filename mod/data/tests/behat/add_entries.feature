@@ -52,7 +52,6 @@ Feature: Users can add entries to database activities
     And I add an entry to "Test database name" database with:
       | Test field name | Student second entry |
     And I press "Save and add another"
-    And the field "Test field name" does not match value "Student second entry"
     And I add an entry to "Test database name" database with:
       | Test field name | Student third entry |
     And I press "Save and view"

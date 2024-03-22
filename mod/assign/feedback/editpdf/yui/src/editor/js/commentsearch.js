@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-/* global SELECTOR */
 var COMMENTSEARCHNAME = "commentsearch",
     COMMENTSEARCH;
 

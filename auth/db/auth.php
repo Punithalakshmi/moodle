@@ -302,38 +302,25 @@ class auth_plugin_db extends auth_plugin_base {
 
             // Find obsolete users.
             if (count($userlist)) {
-                $removeusers = array();
+                list($notin_sql, $params) = $DB->get_in_or_equal($userlist, SQL_PARAMS_NAMED, 'u', false);
                 $params['authtype'] = $this->authtype;
-                $sql = "SELECT u.id, u.username
+                $sql = "SELECT u.*
                           FROM {user} u
-                         WHERE u.auth=:authtype
-                           AND u.deleted=0
-                           AND u.mnethostid=:mnethostid
-                           $suspendselect";
-                $params['mnethostid'] = $CFG->mnet_localhost_id;
-                $internalusersrs = $DB->get_recordset_sql($sql, $params);
-
-                $usernamelist = array_flip($userlist);
-                foreach ($internalusersrs as $internaluser) {
-                    if (!array_key_exists($internaluser->username, $usernamelist)) {
-                        $removeusers[] = $internaluser;
-                    }
-                }
-                $internalusersrs->close();
+                         WHERE u.auth=:authtype AND u.deleted=0 AND u.mnethostid=:mnethostid $suspendselect AND u.username $notin_sql";
             } else {
-                $sql = "SELECT u.id, u.username
+                $sql = "SELECT u.*
                           FROM {user} u
                          WHERE u.auth=:authtype AND u.deleted=0 AND u.mnethostid=:mnethostid $suspendselect";
                 $params = array();
                 $params['authtype'] = $this->authtype;
-                $params['mnethostid'] = $CFG->mnet_localhost_id;
-                $removeusers = $DB->get_records_sql($sql, $params);
             }
+            $params['mnethostid'] = $CFG->mnet_localhost_id;
+            $remove_users = $DB->get_records_sql($sql, $params);
 
-            if (!empty($removeusers)) {
-                $trace->output(get_string('auth_dbuserstoremove', 'auth_db', count($removeusers)));
+            if (!empty($remove_users)) {
+                $trace->output(get_string('auth_dbuserstoremove','auth_db', count($remove_users)));
 
-                foreach ($removeusers as $user) {
+                foreach ($remove_users as $user) {
                     if ($this->config->removeuser == AUTH_REMOVEUSER_FULLDELETE) {
                         delete_user($user);
                         $trace->output(get_string('auth_dbdeleteuser', 'auth_db', array('name'=>$user->username, 'id'=>$user->id)), 1);
@@ -341,12 +328,13 @@ class auth_plugin_db extends auth_plugin_base {
                         $updateuser = new stdClass();
                         $updateuser->id   = $user->id;
                         $updateuser->suspended = 1;
+                        $updateuser = $this->clean_data($updateuser);
                         user_update_user($updateuser, false);
                         $trace->output(get_string('auth_dbsuspenduser', 'auth_db', array('name'=>$user->username, 'id'=>$user->id)), 1);
                     }
                 }
             }
-            unset($removeusers);
+            unset($remove_users);
         }
 
         if (!count($userlist)) {
@@ -371,20 +359,12 @@ class auth_plugin_db extends auth_plugin_base {
 
             // Only go ahead if we actually have fields to update locally.
             if (!empty($updatekeys)) {
-                $update_users = array();
-                // All the drivers can cope with chunks of 10,000. See line 4491 of lib/dml/tests/dml_est.php
-                $userlistchunks = array_chunk($userlist , 10000);
-                foreach($userlistchunks as $userlistchunk) {
-                    list($in_sql, $params) = $DB->get_in_or_equal($userlistchunk, SQL_PARAMS_NAMED, 'u', true);
-                    $params['authtype'] = $this->authtype;
-                    $params['mnethostid'] = $CFG->mnet_localhost_id;
-                    $sql = "SELECT u.id, u.username
+                list($in_sql, $params) = $DB->get_in_or_equal($userlist, SQL_PARAMS_NAMED, 'u', true);
+                $params['authtype'] = $this->authtype;
+                $sql = "SELECT u.id, u.username
                           FROM {user} u
-                         WHERE u.auth = :authtype AND u.deleted = 0 AND u.mnethostid = :mnethostid AND u.username {$in_sql}";
-                    $update_users = $update_users + $DB->get_records_sql($sql, $params);
-                }
-
-                if ($update_users) {
+                         WHERE u.auth=:authtype AND u.deleted=0 AND u.username {$in_sql}";
+                if ($update_users = $DB->get_records_sql($sql, $params)) {
                     $trace->output("User entries to update: ".count($update_users));
 
                     foreach ($update_users as $user) {
@@ -435,6 +415,7 @@ class auth_plugin_db extends auth_plugin_base {
                         $updateuser = new stdClass();
                         $updateuser->id = $olduser->id;
                         $updateuser->suspended = 0;
+                        $updateuser = $this->clean_data($updateuser);
                         user_update_user($updateuser);
                         $trace->output(get_string('auth_dbreviveduser', 'auth_db', array('name' => $username,
                             'id' => $olduser->id)), 1);
@@ -457,6 +438,7 @@ class auth_plugin_db extends auth_plugin_base {
                     $trace->output(get_string('auth_dbinsertuserduplicate', 'auth_db', array('username'=>$user->username, 'auth'=>$collision->auth)), 1);
                     continue;
                 }
+                $user = $this->clean_data($user);
                 try {
                     $id = user_create_user($user, false); // It is truly a new user.
                     $trace->output(get_string('auth_dbinsertuser', 'auth_db', array('name'=>$user->username, 'id'=>$id)), 1);
@@ -598,6 +580,7 @@ class auth_plugin_db extends auth_plugin_base {
         }
         if ($needsupdate) {
             require_once($CFG->dirroot . '/user/lib.php');
+            $updateuser = $this->clean_data($updateuser);
             user_update_user($updateuser);
         }
         return $DB->get_record('user', array('id'=>$userid, 'deleted'=>0));
@@ -930,13 +913,27 @@ class auth_plugin_db extends auth_plugin_base {
 
     /**
      * Clean the user data that comes from an external database.
-     * @deprecated since 3.1, please use core_user::clean_data() instead.
+     *
      * @param array $user the user data to be validated against properties definition.
      * @return stdClass $user the cleaned user data.
      */
     public function clean_data($user) {
-        debugging('The method clean_data() has been deprecated, please use core_user::clean_data() instead.',
-            DEBUG_DEVELOPER);
-        return core_user::clean_data($user);
+        if (empty($user)) {
+            return $user;
+        }
+
+        foreach ($user as $field => $value) {
+            // Get the property parameter type and do the cleaning.
+            try {
+                $property = core_user::get_property_definition($field);
+                $user->$field = clean_param($value, $property['type']);
+            } catch (coding_exception $e) {
+                debugging("The property '$field' could not be cleaned.", DEBUG_DEVELOPER);
+            }
+        }
+
+        return $user;
     }
 }
+
+

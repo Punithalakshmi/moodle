@@ -156,8 +156,6 @@ if ($mform->is_cancelled()) {
     }
 
     $grade_item = new grade_item(array('id'=>$id, 'courseid'=>$courseid));
-    $oldmin = $grade_item->grademin;
-    $oldmax = $grade_item->grademax;
     grade_item::set_properties($grade_item, $data);
     $grade_item->outcomeid = null;
 
@@ -177,12 +175,6 @@ if ($mform->is_cancelled()) {
 
     } else {
         $grade_item->update();
-
-        if (!empty($data->rescalegrades) && $data->rescalegrades == 'yes') {
-            $newmin = $grade_item->grademin;
-            $newmax = $grade_item->grademax;
-            $grade_item->rescale_grades_keep_percentage($oldmin, $oldmax, $newmin, $newmax, 'gradebook');
-        }
     }
 
     // update hiding flag

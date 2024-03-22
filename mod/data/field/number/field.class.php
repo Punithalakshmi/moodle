@@ -94,16 +94,6 @@ class data_field_number extends data_field_base {
         return $DB->sql_cast_char2real($fieldname, true);
     }
 
-    /**
-     * Check if a field from an add form is empty
-     *
-     * @param mixed $value
-     * @param mixed $name
-     * @return bool
-     */
-    function notemptyfield($value, $name) {
-        return strval($value) !== '';
-    }
 }
 
 

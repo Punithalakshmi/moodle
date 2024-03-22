@@ -20,15 +20,13 @@ $focus = '';
 // now we'll deal with the case that the admin has submitted the form with changed settings
 if ($data = data_submitted() and confirm_sesskey()) {
     if (admin_write_settings($data)) {
-        redirect($PAGE->url, get_string('changessaved'), null, \core\output\notification::NOTIFY_SUCCESS);
+        $statusmsg = get_string('changessaved');
     }
 
     if (!empty($adminroot->errors)) {
         $errormsg = get_string('errorwithsettings', 'admin');
         $firsterror = reset($adminroot->errors);
         $focus = $firsterror->id;
-    } else {
-        redirect($PAGE->url);
     }
 }
 

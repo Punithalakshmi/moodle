@@ -21,7 +21,7 @@ if (!class_exists('Google_Client')) {
 
 /**
  * The Google API Client
- * https://github.com/google/google-api-php-client
+ * http://code.google.com/p/google-api-php-client/
  */
 class Google_Client
 {

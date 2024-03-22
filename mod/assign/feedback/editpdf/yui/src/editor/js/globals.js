@@ -12,7 +12,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* eslint-disable no-unused-vars */
 
 /**
  * A list of globals used by this module.
@@ -41,7 +40,6 @@ var AJAXBASE = M.cfg.wwwroot + '/mod/assign/feedback/editpdf/ajax.php',
         ANNOTATIONCOLOURBUTTON :  '.annotationcolourbutton',
         DELETEANNOTATIONBUTTON : '.deleteannotationbutton',
         UNSAVEDCHANGESDIV : '.assignfeedback_editpdf_unsavedchanges',
-        UNSAVEDCHANGESINPUT : 'input[name="assignfeedback_editpdf_haschanges"]',
         STAMPSBUTTON : '.currentstampbutton',
         DIALOGUE : '.' + CSS.DIALOGUE
     },
@@ -73,7 +71,6 @@ var AJAXBASE = M.cfg.wwwroot + '/mod/assign/feedback/editpdf/ajax.php',
         'oval': '.ovalbutton',
         'stamp': '.stampbutton',
         'select': '.selectbutton',
-        'drag': '.dragbutton',
         'highlight': '.highlightbutton'
     },
     STROKEWEIGHT = 4;

@@ -1,5 +1,3 @@
-/* global Item */
-
 /**
  * A managed category.
  *

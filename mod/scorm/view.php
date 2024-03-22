@@ -70,20 +70,13 @@ if (!empty($scorm->popup)) {
 
     $scoid = 0;
     $orgidentifier = '';
-
-    $result = scorm_get_toc($USER, $scorm, $cm->id, TOCFULLURL);
-    // Set last incomplete sco to launch first.
-    if (!empty($result->sco->id)) {
-        $scoid = $result->sco->id;
-    } else {
-        if ($sco = scorm_get_sco($scorm->launch, SCO_ONLY)) {
-            if (($sco->organization == '') && ($sco->launch == '')) {
-                $orgidentifier = $sco->identifier;
-            } else {
-                $orgidentifier = $sco->organization;
-            }
-            $scoid = $sco->id;
+    if ($sco = scorm_get_sco($scorm->launch, SCO_ONLY)) {
+        if (($sco->organization == '') && ($sco->launch == '')) {
+            $orgidentifier = $sco->identifier;
+        } else {
+            $orgidentifier = $sco->organization;
         }
+        $scoid = $sco->id;
     }
 
     if (empty($preventskip) && $scorm->skipview >= SCORM_SKIPVIEW_FIRST &&

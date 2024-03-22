@@ -75,4 +75,4 @@ if ($backtoindex) {
     $returnto = "view.php?f={$id}";
 }
 
-redirect($returnto, $updatemessage, null, \core\output\notification::NOTIFY_SUCCESS);
+redirect($returnto, $updatemessage, 1);

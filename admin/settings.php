@@ -20,11 +20,7 @@ $adminroot = admin_get_root(); // need all settings
 $settingspage = $adminroot->locate($section, true);
 
 if (empty($settingspage) or !($settingspage instanceof admin_settingpage)) {
-    if (moodle_needs_upgrading()) {
-        redirect(new moodle_url('/admin/index.php'));
-    } else {
-        print_error('sectionerror', 'admin', "$CFG->wwwroot/$CFG->admin/");
-    }
+    print_error('sectionerror', 'admin', "$CFG->wwwroot/$CFG->admin/");
     die;
 }
 
@@ -40,7 +36,7 @@ $errormsg  = '';
 
 if ($data = data_submitted() and confirm_sesskey()) {
     if (admin_write_settings($data)) {
-        redirect($PAGE->url, get_string('changessaved'), null, \core\output\notification::NOTIFY_SUCCESS);
+        $statusmsg = get_string('changessaved');
     }
 
     if (empty($adminroot->errors)) {
@@ -48,7 +44,6 @@ if ($data = data_submitted() and confirm_sesskey()) {
             case 'site': redirect("$CFG->wwwroot/");
             case 'admin': redirect("$CFG->wwwroot/$CFG->admin/");
         }
-        redirect($PAGE->url);
     } else {
         $errormsg = get_string('errorwithsettings', 'admin');
         $firsterror = reset($adminroot->errors);
@@ -77,7 +72,7 @@ if (empty($SITE->fullname)) {
 
     // ---------------------------------------------------------------------------------------------------------------
 
-    echo '<form action="' . $PAGE->url . '" method="post" id="adminsettings">';
+    echo '<form action="settings.php" method="post" id="adminsettings">';
     echo '<div class="settingsform clearfix">';
     echo html_writer::input_hidden_params($PAGE->url);
     echo '<input type="hidden" name="sesskey" value="'.sesskey().'" />';
@@ -121,7 +116,7 @@ if (empty($SITE->fullname)) {
 
     // ---------------------------------------------------------------------------------------------------------------
 
-    echo '<form action="' . $PAGE->url . '" method="post" id="adminsettings">';
+    echo '<form action="settings.php" method="post" id="adminsettings">';
     echo '<div class="settingsform clearfix">';
     echo html_writer::input_hidden_params($PAGE->url);
     echo '<input type="hidden" name="sesskey" value="'.sesskey().'" />';

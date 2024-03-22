@@ -27,7 +27,7 @@ $regionmain = 'span9 pull-right';
 $sidepre = 'span3 desktop-first-column';
 // Reset layout mark-up for RTL languages.
 if (right_to_left()) {
-    $regionmain = 'span9 desktop-first-column';
+    $regionmain = 'span9';
     $sidepre = 'span3 pull-right';
 }
 
@@ -52,7 +52,6 @@ echo $OUTPUT->doctype() ?>
                 ?></a>
             <?php echo $OUTPUT->navbar_button(); ?>
             <?php echo $OUTPUT->user_menu(); ?>
-            <?php echo $OUTPUT->search_box(); ?>
             <div class="nav-collapse collapse">
                 <?php echo $OUTPUT->custom_menu(); ?>
                 <ul class="nav pull-right">

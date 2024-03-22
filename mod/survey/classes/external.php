@@ -72,16 +72,14 @@ class mod_survey_external extends external_api {
 
         $params = self::validate_parameters(self::get_surveys_by_courses_parameters(), array('courseids' => $courseids));
 
-        $mycourses = array();
         if (empty($params['courseids'])) {
-            $mycourses = enrol_get_my_courses();
-            $params['courseids'] = array_keys($mycourses);
+            $params['courseids'] = array_keys(enrol_get_my_courses());
         }
 
         // Ensure there are courseids to loop through.
         if (!empty($params['courseids'])) {
 
-            list($courses, $warnings) = external_util::validate_courses($params['courseids'], $mycourses);
+            list($courses, $warnings) = external_util::validate_courses($params['courseids']);
 
             // Get the surveys in this course, this function checks users visibility permissions.
             // We can avoid then additional validate_context calls.

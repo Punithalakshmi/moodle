@@ -131,7 +131,6 @@ class user_edit_form extends moodleform {
             $fields = get_user_fieldnames();
             $authplugin = get_auth_plugin($user->auth);
             $customfields = $authplugin->get_custom_user_profile_fields();
-            $customfieldsdata = profile_user_record($userid, false);
             $fields = array_merge($fields, $customfields);
             foreach ($fields as $field) {
                 if ($field === 'description') {
@@ -143,15 +142,7 @@ class user_edit_form extends moodleform {
                 if (!$mform->elementExists($formfield)) {
                     continue;
                 }
-
-                // Get the original value for the field.
-                if (in_array($field, $customfields)) {
-                    $key = str_replace('profile_field_', '', $field);
-                    $value = isset($customfieldsdata->{$key}) ? $customfieldsdata->{$key} : '';
-                } else {
-                    $value = $user->{$field};
-                }
-
+                $value = $mform->getElement($formfield)->exportValue($mform->getElementValue($formfield)) ?: '';
                 $configvariable = 'field_lock_' . $field;
                 if (isset($authplugin->config->{$configvariable})) {
                     if ($authplugin->config->{$configvariable} === 'locked') {

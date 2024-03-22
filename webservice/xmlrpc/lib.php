@@ -23,6 +23,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+require_once 'Zend/XmlRpc/Client.php';
+
 /**
  * Moodle XML-RPC client
  *
@@ -32,13 +34,10 @@
  * @copyright  2010 Jerome Mouneyrac
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class webservice_xmlrpc_client {
+class webservice_xmlrpc_client extends Zend_XmlRpc_Client {
 
-    /** @var moodle_url The XML-RPC server url. */
-    protected $serverurl;
-
-    /** @var string The token for the XML-RPC call. */
-    protected $token;
+    /** @var string server url e.g. https://yyyyy.com/server.php */
+    private $serverurl;
 
     /**
      * Constructor
@@ -47,8 +46,22 @@ class webservice_xmlrpc_client {
      * @param string $token the token used to do the web service call
      */
     public function __construct($serverurl, $token) {
-        $this->serverurl = new moodle_url($serverurl);
-        $this->token = $token;
+        global $CFG;
+        $this->serverurl = $serverurl;
+        $serverurl = $serverurl . '?wstoken=' . $token;
+        parent::__construct($serverurl);
+        if (!empty($CFG->proxyhost) && !is_proxybypass($serverurl)) {
+            $config = array(
+                'adapter'    => 'Zend_Http_Client_Adapter_Proxy',
+                'proxy_host' => $CFG->proxyhost,
+                'proxy_user' => !empty($CFG->proxyuser) ? $CFG->proxyuser : null,
+                'proxy_pass' => !empty($CFG->proxypassword) ? $CFG->proxypassword : null
+            );
+            if (!empty($CFG->proxyport)) {
+                $config['proxy_port'] = $CFG->proxyport;
+            }
+            $this->getHttpClient()->setConfig($config);
+        }
     }
 
     /**
@@ -57,49 +70,26 @@ class webservice_xmlrpc_client {
      * @param string $token the token used to do the web service call
      */
     public function set_token($token) {
-        $this->token = $token;
+        $this->_serverAddress = $this->serverurl . '?wstoken=' . $token;
     }
 
     /**
      * Execute client WS request with token authentication
      *
      * @param string $functionname the function name
-     * @param array $params An associative array containing the the parameters of the function being called.
-     * @return mixed The decoded XML RPC response.
-     * @throws moodle_exception
+     * @param array $params the parameters of the function
+     * @return mixed
      */
-    public function call($functionname, $params = array()) {
-        if ($this->token) {
-            $this->serverurl->param('wstoken', $this->token);
-        }
+    public function call($functionname, $params=array()) {
+        global $DB, $CFG;
 
-        // Set output options.
-        $outputoptions = array(
-            'encoding' => 'utf-8'
-        );
-
-        // Encode the request.
-        // See MDL-53962 - needed for backwards compatibility on <= 3.0
+        //zend expects 0 based array with numeric indexes
         $params = array_values($params);
-        $request = xmlrpc_encode_request($functionname, $params, $outputoptions);
 
-        // Set the headers.
-        $headers = array(
-            'Content-Length' => strlen($request),
-            'Content-Type' => 'text/xml; charset=utf-8',
-            'Host' => $this->serverurl->get_host(),
-            'User-Agent' => 'Moodle XML-RPC Client/1.0',
-        );
-
-        // Get the response.
-        $response = download_file_content($this->serverurl, $headers, $request);
-
-        // Decode the response.
-        $result = xmlrpc_decode($response);
-        if (is_array($result) && xmlrpc_is_fault($result)) {
-            throw new Exception($result['faultString'], $result['faultCode']);
-        }
+        //traditional Zend soap client call (integrating the token into the URL)
+        $result = parent::call($functionname, $params);
 
         return $result;
     }
+
 }

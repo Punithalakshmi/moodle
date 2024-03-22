@@ -1,7 +1,5 @@
 YUI.add('moodle-course-management', function (Y, NAME) {
 
-/* global DragDrop, Category, Course */
-
 /**
  * Provides drop down menus for list of action links.
  *
@@ -590,8 +588,6 @@ M.course.management.console = null;
 M.course.management.init = function(config) {
     M.course.management.console = new Console(config);
 };
-/* global Console */
-
 /**
  * Drag and Drop handler
  *
@@ -1177,8 +1173,6 @@ Item.prototype = {
     }
 };
 Y.extend(Item, Y.Base, Item.prototype);
-/* global Item */
-
 /**
  * A managed category.
  *
@@ -1622,8 +1616,6 @@ Category.prototype = {
     }
 };
 Y.extend(Category, Item, Category.prototype);
-/* global Item */
-
 /**
  * A managed course.
  *

@@ -118,10 +118,16 @@ function assign_refresh_events($courseid = 0) {
         }
     }
     foreach ($assigns as $assign) {
-        // Get course and course module for the assignment.
-        list($course, $cm) = get_course_and_cm_from_instance($assign->id, 'assign', $assign->course);
-
-        // Refresh the assignment's calendar events.
+        // Use assignment's course column if courseid parameter is not given.
+        if (!$courseid) {
+            $courseid = $assign->course;
+            if (!$course = $DB->get_record('course', array('id' => $courseid), '*')) {
+                continue;
+            }
+        }
+        if (!$cm = get_coursemodule_from_instance('assign', $assign->id, $courseid, false)) {
+            continue;
+        }
         $context = context_module::instance($cm->id);
         $assignment = new assign($context, $cm, $course);
         $assignment->update_calendar($cm->id);
@@ -402,7 +408,7 @@ function assign_print_overview($courses, &$htmlarray) {
         $context = context_module::instance($assignment->coursemodule);
 
         // Does the submission status of the assignment require notification?
-        if (has_capability('mod/assign:submit', $context, null, false)) {
+        if (has_capability('mod/assign:submit', $context)) {
             // Does the submission status of the assignment require notification?
             $submitdetails = assign_get_mysubmission_details_for_print_overview($mysubmissions, $sqlassignmentids,
                     $assignmentidparams, $assignment);
@@ -410,7 +416,7 @@ function assign_print_overview($courses, &$htmlarray) {
             $submitdetails = false;
         }
 
-        if (has_capability('mod/assign:grade', $context, null, false)) {
+        if (has_capability('mod/assign:grade', $context)) {
             // Does the grading status of the assignment require notification ?
             $gradedetails = assign_get_grade_details_for_print_overview($unmarkedsubmissions, $sqlassignmentids,
                     $assignmentidparams, $assignment, $context);
@@ -586,14 +592,10 @@ function assign_get_grade_details_for_print_overview(&$unmarkedsubmissions, $sql
                                              s.userid = g.userid AND
                                              s.assignment = g.assignment AND
                                              g.attemptnumber = s.attemptnumber
-                                   LEFT JOIN {assign} a ON
-                                             a.id = s.assignment
                                        WHERE
                                              ( g.timemodified is NULL OR
-                                             s.timemodified >= g.timemodified OR
-                                             g.grade IS NULL OR
-                                             (g.grade = -1 AND
-                                             a.grade < 0)) AND
+                                             s.timemodified > g.timemodified OR
+                                             g.grade IS NULL ) AND
                                              s.timemodified IS NOT NULL AND
                                              s.status = ? AND
                                              s.latest = 1 AND
@@ -647,14 +649,13 @@ function assign_print_recent_activity($course, $viewfullnames, $timestart) {
 
     $dbparams = array($timestart, $course->id, 'assign', ASSIGN_SUBMISSION_STATUS_SUBMITTED);
     $namefields = user_picture::fields('u', null, 'userid');
-    if (!$submissions = $DB->get_records_sql("SELECT asb.id, asb.timemodified, cm.id AS cmid, um.id as recordid,
+    if (!$submissions = $DB->get_records_sql("SELECT asb.id, asb.timemodified, cm.id AS cmid,
                                                      $namefields
                                                 FROM {assign_submission} asb
                                                      JOIN {assign} a      ON a.id = asb.assignment
                                                      JOIN {course_modules} cm ON cm.instance = a.id
                                                      JOIN {modules} md        ON md.id = cm.module
                                                      JOIN {user} u            ON u.id = asb.userid
-                                                LEFT JOIN {assign_user_mapping} um ON um.userid = u.id AND um.assignment = a.id
                                                WHERE asb.timemodified > ? AND
                                                      asb.latest = 1 AND
                                                      a.course = ? AND
@@ -734,10 +735,7 @@ function assign_print_recent_activity($course, $viewfullnames, $timestart) {
         // Obscure first and last name if blind marking enabled.
         if ($assign->is_blind_marking()) {
             $submission->firstname = get_string('participant', 'mod_assign');
-            if (empty($submission->recordid)) {
-                $submission->recordid = $assign->get_uniqueid_for_user($submission->userid);
-            }
-            $submission->lastname = $submission->recordid;
+            $submission->lastname = $assign->get_uniqueid_for_user($submission->userid);
         }
         print_recent_activity_note($submission->timemodified,
                                    $submission,
@@ -1318,52 +1316,6 @@ function assign_user_complete($course, $user, $coursemodule, $assign) {
 }
 
 /**
- * Rescale all grades for this activity and push the new grades to the gradebook.
- *
- * @param stdClass $course Course db record
- * @param stdClass $cm Course module db record
- * @param float $oldmin
- * @param float $oldmax
- * @param float $newmin
- * @param float $newmax
- */
-function assign_rescale_activity_grades($course, $cm, $oldmin, $oldmax, $newmin, $newmax) {
-    global $DB;
-
-    if ($oldmax <= $oldmin) {
-        // Grades cannot be scaled.
-        return false;
-    }
-    $scale = ($newmax - $newmin) / ($oldmax - $oldmin);
-    if (($newmax - $newmin) <= 1) {
-        // We would lose too much precision, lets bail.
-        return false;
-    }
-
-    $params = array(
-        'p1' => $oldmin,
-        'p2' => $scale,
-        'p3' => $newmin,
-        'a' => $cm->instance
-    );
-
-    $sql = 'UPDATE {assign_grades} set grade = (((grade - :p1) * :p2) + :p3) where assignment = :a';
-    $dbupdate = $DB->execute($sql, $params);
-    if (!$dbupdate) {
-        return false;
-    }
-
-    // Now re-push all grades to the gradebook.
-    $dbparams = array('id' => $cm->instance);
-    $assign = $DB->get_record('assign', $dbparams);
-    $assign->cmidnumber = $cm->idnumber;
-
-    assign_update_grades($assign);
-
-    return true;
-}
-
-/**
  * Print the grade information for the assignment for this user.
  *
  * @param stdClass $course
@@ -1413,11 +1365,7 @@ function assign_get_completion_state($course, $cm, $userid, $type) {
 
     // If completion option is enabled, evaluate it and return true/false.
     if ($assign->get_instance()->completionsubmit) {
-        if ($assign->get_instance()->teamsubmission) {
-            $submission = $assign->get_group_submission($userid, 0, false);
-        } else {
-            $submission = $assign->get_user_submission($userid, false);
-        }
+        $submission = $assign->get_user_submission($userid, false);
         return $submission && $submission->status == ASSIGN_SUBMISSION_STATUS_SUBMITTED;
     } else {
         // Completion option is not enabled so just return $type.
@@ -1479,37 +1427,4 @@ function assign_pluginfile($course,
         return false;
     }
     send_stored_file($file, 0, 0, $forcedownload, $options);
-}
-
-/**
- * Serve the grading panel as a fragment.
- *
- * @param array $args List of named arguments for the fragment loader.
- * @return string
- */
-function mod_assign_output_fragment_gradingpanel($args) {
-    global $CFG;
-
-    $context = $args['context'];
-
-    if ($context->contextlevel != CONTEXT_MODULE) {
-        return null;
-    }
-    require_once($CFG->dirroot . '/mod/assign/locallib.php');
-    $assign = new assign($context, null, null);
-
-    $userid = clean_param($args['userid'], PARAM_INT);
-    $attemptnumber = clean_param($args['attemptnumber'], PARAM_INT);
-    $formdata = array();
-    if (!empty($args['jsonformdata'])) {
-        $serialiseddata = json_decode($args['jsonformdata']);
-        parse_str($serialiseddata, $formdata);
-    }
-    $viewargs = array(
-        'userid' => $userid,
-        'attemptnumber' => $attemptnumber,
-        'formdata' => $formdata
-    );
-
-    return $assign->view('gradingpanel', $viewargs);
 }

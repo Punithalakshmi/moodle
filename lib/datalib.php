@@ -741,11 +741,9 @@ function get_courses_page($categoryid="all", $sort="c.sortorder ASC", $fields="c
  * @param int $page The page number to get
  * @param int $recordsperpage The number of records per page
  * @param int $totalcount Passed in by reference.
- * @param array $requiredcapabilities Extra list of capabilities used to filter courses
  * @return object {@link $COURSE} records
  */
-function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$totalcount,
-                            $requiredcapabilities = array()) {
+function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$totalcount) {
     global $CFG, $DB;
 
     if ($DB->sql_regex_supported()) {
@@ -787,7 +785,7 @@ function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$total
             $searchcond[] = "$concat $REGEXP :ss$i";
             $params['ss'.$i] = "(^|[^a-zA-Z0-9])$searchterm([^a-zA-Z0-9]|$)";
 
-        } else if ((substr($searchterm,0,1) == "-") && (core_text::strlen($searchterm) > 1)) {
+        } else if (substr($searchterm,0,1) == "-") {
             $searchterm = trim($searchterm, '+-');
             $searchterm = preg_quote($searchterm, '|');
             $searchcond[] = "$concat $NOTREGEXP :ss$i";
@@ -800,7 +798,8 @@ function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$total
     }
 
     if (empty($searchcond)) {
-        $searchcond = array('1 = 1');
+        $totalcount = 0;
+        return array();
     }
 
     $searchcond = implode(" AND ", $searchcond);
@@ -824,14 +823,11 @@ function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$total
 
     $rs = $DB->get_recordset_sql($sql, $params);
     foreach($rs as $course) {
-        // Preload contexts only for hidden courses or courses we need to return.
-        context_helper::preload_from_record($course);
-        $coursecontext = context_course::instance($course->id);
-        if (!$course->visible && !has_capability('moodle/course:viewhiddencourses', $coursecontext)) {
-            continue;
-        }
-        if (!empty($requiredcapabilities)) {
-            if (!has_all_capabilities($requiredcapabilities, $coursecontext)) {
+        if (!$course->visible) {
+            // preload contexts only for hidden courses or courses we need to return
+            context_helper::preload_from_record($course);
+            $coursecontext = context_course::instance($course->id);
+            if (!has_capability('moodle/course:viewhiddencourses', $coursecontext)) {
                 continue;
             }
         }
@@ -1161,6 +1157,35 @@ function get_my_remotehosts() {
     return false;
 }
 
+/**
+ * This function creates a default separated/connected scale
+ *
+ * This function creates a default separated/connected scale
+ * so there's something in the database.  The locations of
+ * strings and files is a bit odd, but this is because we
+ * need to maintain backward compatibility with many different
+ * existing language translations and older sites.
+ *
+ * @global object
+ * @return void
+ */
+function make_default_scale() {
+    global $DB;
+
+    $defaultscale = new stdClass();
+    $defaultscale->courseid = 0;
+    $defaultscale->userid = 0;
+    $defaultscale->name  = get_string('separateandconnected');
+    $defaultscale->description = get_string('separateandconnectedinfo');
+    $defaultscale->scale = get_string('postrating1', 'forum').','.
+                           get_string('postrating2', 'forum').','.
+                           get_string('postrating3', 'forum');
+    $defaultscale->timemodified = time();
+
+    $defaultscale->id = $DB->insert_record('scale', $defaultscale);
+    $DB->execute("UPDATE {forum} SET scale = ?", array($defaultscale->id));
+}
+
 
 /**
  * Returns a menu of all available scales from the site as well as the given course
@@ -1178,7 +1203,13 @@ function get_scales_menu($courseid=0) {
           ORDER BY courseid ASC, name ASC";
     $params = array($courseid);
 
-    return $scales = $DB->get_records_sql_menu($sql, $params);
+    if ($scales = $DB->get_records_sql_menu($sql, $params)) {
+        return $scales;
+    }
+
+    make_default_scale();
+
+    return $DB->get_records_sql_menu($sql, $params);
 }
 
 /**

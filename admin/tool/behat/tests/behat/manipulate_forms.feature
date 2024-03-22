@@ -7,10 +7,12 @@ Feature: Forms manipulation
   @javascript
   Scenario: Basic forms manipulation
     Given I log in as "admin"
-    And I open my profile in edit mode
+    And I follow "Preferences" in the user menu
+    And I follow "Edit profile"
     When I set the field "First name" to "Field value"
     And I set the field "Select a country" to "Japan"
     And I set the field "Unmask" to "1"
+    And I expand all fieldsets
     Then the field "First name" matches value "Field value"
     And the "Select a country" select box should contain "Japan"
     And the field "Unmask" matches value "1"

@@ -338,20 +338,14 @@ function page_pluginfile($course, $cm, $context, $filearea, $args, $forcedownloa
             return false;
         }
 
-        // We need to rewrite the pluginfile URLs so the media filters can work.
-        $content = file_rewrite_pluginfile_urls($page->content, 'webservice/pluginfile.php', $context->id, 'mod_page', 'content',
-                                                $page->revision);
+        // remove @@PLUGINFILE@@/
+        $content = str_replace('@@PLUGINFILE@@/', '', $page->content);
+
         $formatoptions = new stdClass;
         $formatoptions->noclean = true;
         $formatoptions->overflowdiv = true;
         $formatoptions->context = $context;
         $content = format_text($content, $page->contentformat, $formatoptions);
-
-        // Remove @@PLUGINFILE@@/.
-        $options = array('reverse' => true);
-        $content = file_rewrite_pluginfile_urls($content, 'webservice/pluginfile.php', $context->id, 'mod_page', 'content',
-                                                $page->revision, $options);
-        $content = str_replace('@@PLUGINFILE@@/', '', $content);
 
         send_file($content, $filename, 0, 0, true, true);
     } else {

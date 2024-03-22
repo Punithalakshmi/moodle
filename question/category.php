@@ -81,27 +81,21 @@ if ($param->moveupcontext || $param->movedowncontext) {
     // The previous line does a redirect().
 }
 
-if ($param->delete) {
-    if (!$category = $DB->get_record("question_categories", array("id" => $param->delete))) {
+if ($param->delete && ($questionstomove = $DB->count_records("question", array("category" => $param->delete)))) {
+    if (!$category = $DB->get_record("question_categories", array("id" => $param->delete))) {  // security
         print_error('nocate', 'question', $thispageurl->out(), $param->delete);
     }
-
-    question_remove_stale_questions_from_category($param->delete);
-    $questionstomove = $DB->count_records("question", array("category" => $param->delete));
-
-    // Second pass, if we still have questions to move, setup the form.
-    if ($questionstomove) {
-        $categorycontext = context::instance_by_id($category->contextid);
-        $qcobject->moveform = new question_move_form($thispageurl,
-            array('contexts' => array($categorycontext), 'currentcat' => $param->delete));
-        if ($qcobject->moveform->is_cancelled()) {
-            redirect($thispageurl);
-        } else if ($formdata = $qcobject->moveform->get_data()) {
-            list($tocategoryid, $tocontextid) = explode(',', $formdata->category);
-            $qcobject->move_questions_and_delete_category($formdata->delete, $tocategoryid);
-            $thispageurl->remove_params('cat', 'category');
-            redirect($thispageurl);
-        }
+    $categorycontext = context::instance_by_id($category->contextid);
+    $qcobject->moveform = new question_move_form($thispageurl,
+                array('contexts'=>array($categorycontext), 'currentcat'=>$param->delete));
+    if ($qcobject->moveform->is_cancelled()){
+        redirect($thispageurl);
+    }  elseif ($formdata = $qcobject->moveform->get_data()) {
+        /// 'confirm' is the category to move existing questions to
+        list($tocategoryid, $tocontextid) = explode(',', $formdata->category);
+        $qcobject->move_questions_and_delete_category($formdata->delete, $tocategoryid);
+        $thispageurl->remove_params('cat', 'category');
+        redirect($thispageurl);
     }
 } else {
     $questionstomove = 0;

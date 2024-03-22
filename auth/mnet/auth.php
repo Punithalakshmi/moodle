@@ -42,12 +42,9 @@ class auth_plugin_mnet extends auth_plugin_base {
     }
 
     /**
-     * Old syntax of class constructor. Deprecated in PHP7.
-     *
-     * @deprecated since Moodle 3.1
+     * Old syntax of class constructor for backward compatibility.
      */
     public function auth_plugin_mnet() {
-        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
         self::__construct();
     }
 
@@ -68,7 +65,7 @@ class auth_plugin_mnet extends auth_plugin_base {
      * Return user data for the provided token, compare with user_agent string.
      *
      * @param  string $token    The unique ID provided by remotehost.
-     * @param  string $useragent       User Agent string.
+     * @param  string $UA       User Agent string.
      * @return array  $userdata Array of user info for remote host
      */
     function user_authorise($token, $useragent) {
@@ -263,7 +260,7 @@ class auth_plugin_mnet extends auth_plugin_base {
             exit;
         }
 
-        if (user_not_fully_set_up($remoteuser, false)) {
+        if (user_not_fully_set_up($remoteuser)) {
             print_error('notenoughidpinfo', 'mnet');
             exit;
         }
@@ -302,7 +299,7 @@ class auth_plugin_mnet extends auth_plugin_base {
             $remoteuser->firstaccess = 0;
             $remoteuser->confirmed = 1;
 
-            $remoteuser->id = user_create_user($remoteuser, false);
+            $remoteuser->id = $DB->insert_record('user', $remoteuser);
             $firsttime = true;
             $localuser = $remoteuser;
         }
@@ -1031,7 +1028,7 @@ class auth_plugin_mnet extends auth_plugin_base {
      *
      * @see process_new_icon()
      * @uses mnet_remote_client callable via MNet XML-RPC
-     * @param int $username The id of the user
+     * @param int $userid The id of the user
      * @return false|array false if user not found, empty array if no picture exists, array with data otherwise
      */
     function fetch_user_image($username) {

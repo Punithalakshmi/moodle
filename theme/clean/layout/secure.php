@@ -26,7 +26,7 @@
 $html = theme_clean_get_html_for_settings($OUTPUT, $PAGE);
 
 // Set default (LTR) layout mark-up for a three column page.
-$regionmainbox = 'span9 desktop-first-column';
+$regionmainbox = 'span9';
 $regionmain = 'span8 pull-right';
 $sidepre = 'span4 desktop-first-column';
 $sidepost = 'span3 pull-right';
@@ -54,7 +54,9 @@ echo $OUTPUT->doctype() ?>
 <header role="banner" class="navbar navbar-fixed-top moodle-has-zindex">
     <nav role="navigation" class="navbar-inner">
         <div class="container-fluid">
-            <?php echo $OUTPUT->navbar_home(false); ?>
+            <span class="brand"><?php echo
+                format_string($SITE->shortname, true, array('context' => context_course::instance(SITEID)));
+                ?></span>
             <?php echo $OUTPUT->navbar_button(); ?>
             <div class="nav-collapse collapse">
                 <ul class="nav pull-right">

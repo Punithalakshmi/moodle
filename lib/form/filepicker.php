@@ -85,12 +85,9 @@ class MoodleQuickForm_filepicker extends HTML_QuickForm_input {
     }
 
     /**
-     * Old syntax of class constructor. Deprecated in PHP7.
-     *
-     * @deprecated since Moodle 3.1
+     * Old syntax of class constructor for backward compatibility.
      */
     public function MoodleQuickForm_filepicker($elementName=null, $elementLabel=null, $attributes=null, $options=null) {
-        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
         self::__construct($elementName, $elementLabel, $attributes, $options);
     }
 

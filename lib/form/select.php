@@ -57,12 +57,9 @@ class MoodleQuickForm_select extends HTML_QuickForm_select{
     }
 
     /**
-     * Old syntax of class constructor. Deprecated in PHP7.
-     *
-     * @deprecated since Moodle 3.1
+     * Old syntax of class constructor for backward compatibility.
      */
     public function MoodleQuickForm_select($elementName=null, $elementLabel=null, $options=null, $attributes=null) {
-        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
         self::__construct($elementName, $elementLabel, $options, $attributes);
     }
 

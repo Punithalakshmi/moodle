@@ -5,7 +5,8 @@ Feature: Atto bold button
   @javascript
   Scenario: Bold some text
     Given I log in as "admin"
-    And I open my profile in edit mode
+    And I follow "Profile" in the user menu
+    And I follow "Edit profile"
     And I set the field "Description" to "Badger"
     And I select the text in the "Description" Atto editor
     When I click on "Bold" "button"
@@ -20,7 +21,8 @@ Feature: Atto bold button
   @javascript
   Scenario: Unbold some text
     Given I log in as "admin"
-    And I open my profile in edit mode
+    And I follow "Profile" in the user menu
+    And I follow "Edit profile"
     And I set the field "Description" to "Mouse"
     And I select the text in the "Description" Atto editor
     When I click on "Bold" "button"

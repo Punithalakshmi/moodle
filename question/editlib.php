@@ -260,15 +260,11 @@ class_alias('core_question\bank\view', 'question_bank_view', true);
  * @param string $baseurl the name of the script calling this funciton. For examle 'qusetion/edit.php'.
  * @param string $edittab code for this edit tab
  * @param bool $requirecmid require cmid? default false
- * @param bool $unused no longer used, do no pass
+ * @param bool $requirecourseid require courseid, if cmid is not given? default true
  * @return array $thispageurl, $contexts, $cmid, $cm, $module, $pagevars
  */
-function question_edit_setup($edittab, $baseurl, $requirecmid = false, $unused = null) {
-    global $DB, $PAGE, $CFG;
-
-    if ($unused !== null) {
-        debugging('Deprecated argument passed to question_edit_setup()', DEBUG_DEVELOPER);
-    }
+function question_edit_setup($edittab, $baseurl, $requirecmid = false, $requirecourseid = true) {
+    global $DB, $PAGE;
 
     $thispageurl = new moodle_url($baseurl);
     $thispageurl->remove_all_params(); // We are going to explicity add back everything important - this avoids unwanted params from being retained.
@@ -287,10 +283,18 @@ function question_edit_setup($edittab, $baseurl, $requirecmid = false, $unused =
     } else {
         $module = null;
         $cm = null;
-        $courseid  = required_param('courseid', PARAM_INT);
-        $thispageurl->params(compact('courseid'));
-        require_login($courseid, false);
-        $thiscontext = context_course::instance($courseid);
+        if ($requirecourseid){
+            $courseid  = required_param('courseid', PARAM_INT);
+        } else {
+            $courseid  = optional_param('courseid', 0, PARAM_INT);
+        }
+        if ($courseid){
+            $thispageurl->params(compact('courseid'));
+            require_login($courseid, false);
+            $thiscontext = context_course::instance($courseid);
+        } else {
+            $thiscontext = null;
+        }
     }
 
     if ($thiscontext){

@@ -22,9 +22,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->dirroot . '/mod/feedback/lib.php');
+if (is_file($CFG->dirroot.'/mod/feedback/lib.php')) {
+    require_once($CFG->dirroot.'/mod/feedback/lib.php');
+    define('FEEDBACK_BLOCK_LIB_IS_OK', true);
+}
 
 class block_feedback extends block_list {
 
@@ -47,6 +48,11 @@ class block_feedback extends block_list {
         $this->content->items = array();
         $this->content->icons = array();
         $this->content->footer = '';
+
+        if (!defined('FEEDBACK_BLOCK_LIB_IS_OK')) {
+            $this->content->items = array(get_string('missing_feedback_module', 'block_feedback'));
+            return $this->content;
+        }
 
         $courseid = $this->page->course->id;
         if ($courseid <= 0) {

@@ -1,6 +1,5 @@
 YUI.add('moodle-mod_quiz-dragdrop', function (Y, NAME) {
 
-/* eslint-disable no-unused-vars */
 /**
  * Drag and Drop for Quiz sections and slots.
  *
@@ -291,7 +290,6 @@ M.mod_quiz = M.mod_quiz || {};
 M.mod_quiz.init_section_dragdrop = function(params) {
     new DRAGSECTION(params);
 };
-/* global SELECTOR */
 /**
  * Resource drag and drop.
  *

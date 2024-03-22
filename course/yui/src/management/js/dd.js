@@ -1,5 +1,3 @@
-/* global Console */
-
 /**
  * Drag and Drop handler
  *

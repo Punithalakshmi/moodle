@@ -271,9 +271,6 @@ class block_manager {
      * @return boolean true if this region exists on this page.
      */
     public function is_known_region($region) {
-        if (empty($region)) {
-            return false;
-        }
         return array_key_exists($region, $this->regions);
     }
 
@@ -1498,10 +1495,10 @@ class block_manager {
             if ($bits[0] == 'tag' && !empty($this->page->subpage)) {
                 // better navbar for tag pages
                 $editpage->navbar->add(get_string('tags'), new moodle_url('/tag/'));
-                $tag = core_tag_tag::get($this->page->subpage);
+                $tag = tag_get('id', $this->page->subpage, '*');
                 // tag search page doesn't have subpageid
                 if ($tag) {
-                    $editpage->navbar->add($tag->get_display_name(), $tag->get_view_url());
+                    $editpage->navbar->add($tag->name, new moodle_url('/tag/index.php', array('id'=>$tag->id)));
                 }
             }
             $editpage->navbar->add($block->get_title());
@@ -2044,15 +2041,6 @@ function blocks_name_allowed_in_format($name, $pageformat) {
 function blocks_delete_instance($instance, $nolongerused = false, $skipblockstables = false) {
     global $DB;
 
-    // Allow plugins to use this block before we completely delete it.
-    if ($pluginsfunction = get_plugins_with_function('pre_block_delete')) {
-        foreach ($pluginsfunction as $plugintype => $plugins) {
-            foreach ($plugins as $pluginfunction) {
-                $pluginfunction($instance);
-            }
-        }
-    }
-
     if ($block = block_instance($instance->blockname, $instance)) {
         $block->instance_delete();
     }
@@ -2073,31 +2061,21 @@ function blocks_delete_instance($instance, $nolongerused = false, $skipblockstab
 function blocks_delete_instances($instanceids) {
     global $DB;
 
-    $limit = 1000;
-    $count = count($instanceids);
-    $chunks = [$instanceids];
-    if ($count > $limit) {
-        $chunks = array_chunk($instanceids, $limit);
+    $instances = $DB->get_recordset_list('block_instances', 'id', $instanceids);
+    foreach ($instances as $instance) {
+        blocks_delete_instance($instance, false, true);
     }
+    $instances->close();
 
-    // Perform deletion for each chunk.
-    foreach ($chunks as $chunk) {
-        $instances = $DB->get_recordset_list('block_instances', 'id', $chunk);
-        foreach ($instances as $instance) {
-            blocks_delete_instance($instance, false, true);
-        }
-        $instances->close();
+    $DB->delete_records_list('block_positions', 'blockinstanceid', $instanceids);
+    $DB->delete_records_list('block_instances', 'id', $instanceids);
 
-        $DB->delete_records_list('block_positions', 'blockinstanceid', $chunk);
-        $DB->delete_records_list('block_instances', 'id', $chunk);
-
-        $preferences = array();
-        foreach ($chunk as $instanceid) {
-            $preferences[] = 'block' . $instanceid . 'hidden';
-            $preferences[] = 'docked_block_instance_' . $instanceid;
-        }
-        $DB->delete_records_list('user_preferences', 'name', $preferences);
+    $preferences = array();
+    foreach ($instanceids as $instanceid) {
+        $preferences[] = 'block' . $instanceid . 'hidden';
+        $preferences[] = 'docked_block_instance_' . $instanceid;
     }
+    $DB->delete_records_list('user_preferences', 'name', $preferences);
 }
 
 /**
@@ -2221,7 +2199,7 @@ function blocks_parse_default_blocks_list($blocksstr) {
 function blocks_get_default_site_course_blocks() {
     global $CFG;
 
-    if (isset($CFG->defaultblocks_site)) {
+    if (!empty($CFG->defaultblocks_site)) {
         return blocks_parse_default_blocks_list($CFG->defaultblocks_site);
     } else {
         return array(
@@ -2239,13 +2217,13 @@ function blocks_get_default_site_course_blocks() {
 function blocks_add_default_course_blocks($course) {
     global $CFG;
 
-    if (isset($CFG->defaultblocks_override)) {
+    if (!empty($CFG->defaultblocks_override)) {
         $blocknames = blocks_parse_default_blocks_list($CFG->defaultblocks_override);
 
     } else if ($course->id == SITEID) {
         $blocknames = blocks_get_default_site_course_blocks();
 
-    } else if (isset($CFG->{'defaultblocks_' . $course->format})) {
+    } else if (!empty($CFG->{'defaultblocks_' . $course->format})) {
         $blocknames = blocks_parse_default_blocks_list($CFG->{'defaultblocks_' . $course->format});
 
     } else {
@@ -2282,6 +2260,6 @@ function blocks_add_default_system_blocks() {
     }
 
     $newblocks = array('private_files', 'online_users', 'badges', 'calendar_month', 'calendar_upcoming');
-    $newcontent = array('lp', 'course_overview');
+    $newcontent = array('course_overview');
     $page->blocks->add_blocks(array(BLOCK_POS_RIGHT => $newblocks, 'content' => $newcontent), 'my-index', $subpagepattern);
 }

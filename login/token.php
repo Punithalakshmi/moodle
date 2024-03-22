@@ -43,8 +43,7 @@ $username = trim(core_text::strtolower($username));
 if (is_restored_user($username)) {
     throw new moodle_exception('restoredaccountresetpassword', 'webservice');
 }
-$reason = null;
-$user = authenticate_user_login($username, $password, false, $reason, false);
+$user = authenticate_user_login($username, $password);
 if (!empty($user)) {
 
     //Non admin can not authenticate if maintenance mode

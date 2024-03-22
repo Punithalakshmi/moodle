@@ -71,16 +71,6 @@ class core_phpunit_advanced_testcase extends advanced_testcase {
         set_debugging(DEBUG_DEVELOPER);
     }
 
-    /**
-     * @test
-     *
-     * Annotations are a valid PHPUnit method for running tests.  Debugging needs to support them.
-     */
-    public function debugging_called_with_annotation() {
-        debugging('pokus', DEBUG_MINIMAL);
-        $this->assertDebuggingCalled('pokus', DEBUG_MINIMAL);
-    }
-
     public function test_set_user() {
         global $USER, $DB, $SESSION;
 
@@ -368,7 +358,7 @@ class core_phpunit_advanced_testcase extends advanced_testcase {
 
         $this->setCurrentTimeStart();
         $this->assertTimeCurrent(time());
-        $this->waitForSecond();
+        sleep(2);
         $this->assertTimeCurrent(time());
         $this->assertTimeCurrent(time()-1);
 

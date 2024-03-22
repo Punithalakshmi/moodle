@@ -25,7 +25,7 @@
 
 // NOTE: no MOODLE_INTERNAL test here, this file may be required by behat before including /config.php.
 
-use Behat\Testwork\Environment\Environment;
+use \Behat\Behat\Context\BehatContext;
 
 /**
  * Helper to get behat contexts.
@@ -38,26 +38,18 @@ use Behat\Testwork\Environment\Environment;
 class behat_context_helper {
 
     /**
-     * Behat environment.
-     *
-     * @var Environment
+     * @var BehatContext main behat context.
      */
-    protected static $environment = null;
-
+    protected static $maincontext = false;
 
     /**
-     * @var Escaper::escapeLiteral
-     */
-    protected static $escaper;
-
-    /**
-     * Sets the browser session.
+     * Save main behat context reference to be used for finding sub-contexts.
      *
-     * @param Environment $environment
+     * @param BehatContext $maincontext
      * @return void
      */
-    public static function set_session(Environment $environment) {
-        self::$environment = $environment;
+    public static function set_main_context(BehatContext $maincontext) {
+        self::$maincontext = $maincontext;
     }
 
     /**
@@ -73,23 +65,10 @@ class behat_context_helper {
      */
     public static function get($classname) {
 
-        if (!$subcontext = self::$environment->getContext($classname)) {
+        if (!$subcontext = self::$maincontext->getSubcontextByClassName($classname)) {
             throw coding_exception('The required "' . $classname . '" class does not exist');
         }
 
         return $subcontext;
-    }
-
-    /**
-     * Translates string to XPath literal.
-     *
-     * @param string $label label to escape
-     * @return string escaped string.
-     */
-    public static function escape($label) {
-        if (empty(self::$escaper)) {
-            self::$escaper = new \Behat\Mink\Selector\Xpath\Escaper();
-        }
-        return self::$escaper->escapeLiteral($label);
     }
 }

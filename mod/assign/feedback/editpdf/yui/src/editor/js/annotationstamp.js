@@ -12,7 +12,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global SELECTOR */
 
 /**
  * Provides an in browser PDF editor.
@@ -64,13 +63,10 @@ Y.extend(ANNOTATIONSTAMP, M.assignfeedback_editpdf.annotation, {
         node.setY(position.y);
         drawable.store_position(node, position.x, position.y);
 
-        // Bind events only when editing.
-        if (!this.editor.get('readonly')) {
-            // Pass through the event handlers on the div.
-            node.on('gesturemovestart', this.editor.edit_start, null, this.editor);
-            node.on('gesturemove', this.editor.edit_move, null, this.editor);
-            node.on('gesturemoveend', this.editor.edit_end, null, this.editor);
-        }
+        // Pass throught the event handlers on the div.
+        node.on('gesturemovestart', this.editor.edit_start, null, this.editor);
+        node.on('gesturemove', this.editor.edit_move, null, this.editor);
+        node.on('gesturemoveend', this.editor.edit_end, null, this.editor);
 
         drawable.nodes.push(node);
 

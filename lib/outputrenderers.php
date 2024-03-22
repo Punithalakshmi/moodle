@@ -477,13 +477,6 @@ class core_renderer extends renderer_base {
         }
 
         $output = '';
-
-        // Allow a url_rewrite plugin to setup any dynamic head content.
-        if (isset($CFG->urlrewriteclass) && !isset($CFG->upgraderunning)) {
-            $class = $CFG->urlrewriteclass;
-            $output .= $class::html_head_setup();
-        }
-
         $output .= '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />' . "\n";
         $output .= '<meta name="keywords" content="moodle, ' . $this->page->title . '" />' . "\n";
         // This is only set by the {@link redirect()} method
@@ -566,7 +559,7 @@ class core_renderer extends renderer_base {
     public function standard_top_of_body_html() {
         global $CFG;
         $output = $this->page->requires->get_top_of_body_code();
-        if ($this->page->pagelayout !== 'embedded' && !empty($CFG->additionalhtmltopofbody)) {
+        if (!empty($CFG->additionalhtmltopofbody)) {
             $output .= "\n".$CFG->additionalhtmltopofbody;
         }
         $output .= $this->maintenance_warning();
@@ -689,7 +682,7 @@ class core_renderer extends renderer_base {
         // but some of the content won't be known until later, so we return a placeholder
         // for now. This will be replaced with the real content in {@link core_renderer::footer()}.
         $output = '';
-        if ($this->page->pagelayout !== 'embedded' && !empty($CFG->additionalhtmlfooter)) {
+        if (!empty($CFG->additionalhtmlfooter)) {
             $output .= "\n".$CFG->additionalhtmlfooter;
         }
         $output .= $this->unique_end_html_token;
@@ -873,13 +866,10 @@ class core_renderer extends renderer_base {
      * @param boolean $debugdisableredirect this redirect has been disabled for
      *         debugging purposes. Display a message that explains, and don't
      *         trigger the redirect.
-     * @param string $messagetype The type of notification to show the message in.
-     *         See constants on \core\output\notification.
      * @return string The HTML to display to the user before dying, may contain
      *         meta refresh, javascript refresh, and may have set header redirects
      */
-    public function redirect_message($encodedurl, $message, $delay, $debugdisableredirect,
-                                     $messagetype = \core\output\notification::NOTIFY_INFO) {
+    public function redirect_message($encodedurl, $message, $delay, $debugdisableredirect) {
         global $CFG;
         $url = str_replace('&amp;', '&', $encodedurl);
 
@@ -910,7 +900,7 @@ class core_renderer extends renderer_base {
                 throw new coding_exception('You cannot redirect after the entire page has been generated');
                 break;
         }
-        $output .= $this->notification($message, $messagetype);
+        $output .= $this->notification($message, 'redirectmessage');
         $output .= '<div class="continuebutton">(<a href="'. $encodedurl .'">'. get_string('continue') .'</a>)</div>';
         if ($debugdisableredirect) {
             $output .= '<p><strong>'.get_string('erroroutput', 'error').'</strong></p>';
@@ -1037,7 +1027,7 @@ class core_renderer extends renderer_base {
      * @return string HTML fragment
      */
     public function footer() {
-        global $CFG, $DB, $PAGE;
+        global $CFG, $DB;
 
         $output = $this->container_end_all(true);
 
@@ -1062,13 +1052,6 @@ class core_renderer extends renderer_base {
         }
         $footer = str_replace($this->unique_performance_info_token, $performanceinfo, $footer);
 
-        // Only show notifications when we have a $PAGE context id.
-        if (!empty($PAGE->context->id)) {
-            $this->page->requires->js_call_amd('core/notification', 'init', array(
-                $PAGE->context->id,
-                \core\notification::fetch_as_array($this)
-            ));
-        }
         $footer = str_replace($this->unique_end_html_token, $this->page->requires->get_end_code(), $footer);
 
         $this->page->set_state(moodle_page::STATE_DONE);
@@ -1098,37 +1081,22 @@ class core_renderer extends renderer_base {
      */
     public function course_content_header($onlyifnotcalledbefore = false) {
         global $CFG;
+        if ($this->page->course->id == SITEID) {
+            // return immediately and do not include /course/lib.php if not necessary
+            return '';
+        }
         static $functioncalled = false;
         if ($functioncalled && $onlyifnotcalledbefore) {
             // we have already output the content header
             return '';
         }
-
-        // Output any session notification.
-        $notifications = \core\notification::fetch();
-
-        $bodynotifications = '';
-        foreach ($notifications as $notification) {
-            $bodynotifications .= $this->render_from_template(
-                    $notification->get_template_name(),
-                    $notification->export_for_template($this)
-                );
-        }
-
-        $output = html_writer::span($bodynotifications, 'notifications', array('id' => 'user-notifications'));
-
-        if ($this->page->course->id == SITEID) {
-            // return immediately and do not include /course/lib.php if not necessary
-            return $output;
-        }
-
         require_once($CFG->dirroot.'/course/lib.php');
         $functioncalled = true;
         $courseformat = course_get_format($this->page->course);
         if (($obj = $courseformat->course_content_header()) !== null) {
-            $output .= html_writer::div($courseformat->get_renderer($this->page)->render($obj), 'course-content-header');
+            return html_writer::div($courseformat->get_renderer($this->page)->render($obj), 'course-content-header');
         }
-        return $output;
+        return '';
     }
 
     /**
@@ -1881,48 +1849,6 @@ class core_renderer extends renderer_base {
 
         return $this->render($select);
     }
-
-    /**
-     * Returns a dataformat selection and download form
-     *
-     * @param string $label A text label
-     * @param moodle_url|string $base The download page url
-     * @param string $name The query param which will hold the type of the download
-     * @param array $params Extra params sent to the download page
-     * @return string HTML fragment
-     */
-    public function download_dataformat_selector($label, $base, $name = 'dataformat', $params = array()) {
-
-        $formats = core_plugin_manager::instance()->get_plugins_of_type('dataformat');
-        $options = array();
-        foreach ($formats as $format) {
-            if ($format->is_enabled()) {
-                $options[] = array(
-                    'value' => $format->name,
-                    'label' => get_string('dataformat', $format->component),
-                );
-            }
-        }
-        $hiddenparams = array();
-        foreach ($params as $key => $value) {
-            $hiddenparams[] = array(
-                'name' => $key,
-                'value' => $value,
-            );
-        }
-        $data = array(
-            'label' => $label,
-            'base' => $base,
-            'name' => $name,
-            'params' => $hiddenparams,
-            'options' => $options,
-            'sesskey' => sesskey(),
-            'submit' => get_string('download'),
-        );
-
-        return $this->render_from_template('core/dataformat_selector', $data);
-    }
-
 
     /**
      * Internal implementation of single_select rendering
@@ -2766,7 +2692,7 @@ EOD;
      * @param string $debuginfo Debugging information
      * @return string the HTML to output.
      */
-    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null, $errorcode = "") {
+    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null) {
         global $CFG;
 
         $output = '';
@@ -2795,9 +2721,6 @@ EOD;
             $protocol = (isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0');
             if (empty($_SERVER['HTTP_RANGE'])) {
                 @header($protocol . ' 404 Not Found');
-            } else if (core_useragent::check_safari_ios_version(602) && !empty($_SERVER['HTTP_X_PLAYBACK_SESSION_ID'])) {
-                // Coax iOS 10 into sending the session cookie.
-                @header($protocol . ' 403 Forbidden');
             } else {
                 // Must stop byteserving attempts somehow,
                 // this is weird but Chrome PDF viewer can be stopped only with 407!
@@ -2850,65 +2773,38 @@ EOD;
     }
 
     /**
-     * Output a notification (that is, a status message about something that has just happened).
+     * Output a notification (that is, a status message about something that has
+     * just happened).
      *
-     * Note: \core\notification::add() may be more suitable for your usage.
-     *
-     * @param string $message The message to print out.
-     * @param string $type    The type of notification. See constants on \core\output\notification.
+     * @param string $message the message to print out
+     * @param string $classes normally 'notifyproblem' or 'notifysuccess'.
      * @return string the HTML to output.
      */
-    public function notification($message, $type = null) {
-        $typemappings = [
-            // Valid types.
-            'success'           => \core\output\notification::NOTIFY_SUCCESS,
-            'info'              => \core\output\notification::NOTIFY_INFO,
-            'warning'           => \core\output\notification::NOTIFY_WARNING,
-            'error'             => \core\output\notification::NOTIFY_ERROR,
+    public function notification($message, $classes = 'notifyproblem') {
 
-            // Legacy types mapped to current types.
-            'notifyproblem'     => \core\output\notification::NOTIFY_ERROR,
-            'notifytiny'        => \core\output\notification::NOTIFY_ERROR,
-            'notifyerror'       => \core\output\notification::NOTIFY_ERROR,
-            'notifysuccess'     => \core\output\notification::NOTIFY_SUCCESS,
-            'notifymessage'     => \core\output\notification::NOTIFY_INFO,
-            'notifyredirect'    => \core\output\notification::NOTIFY_INFO,
-            'redirectmessage'   => \core\output\notification::NOTIFY_INFO,
-        ];
+        $classmappings = array(
+            'notifyproblem' => \core\output\notification::NOTIFY_PROBLEM,
+            'notifytiny' => \core\output\notification::NOTIFY_PROBLEM,
+            'notifysuccess' => \core\output\notification::NOTIFY_SUCCESS,
+            'notifymessage' => \core\output\notification::NOTIFY_MESSAGE,
+            'redirectmessage' => \core\output\notification::NOTIFY_REDIRECT
+        );
 
-        $extraclasses = [];
-
-        if ($type) {
-            if (strpos($type, ' ') === false) {
-                // No spaces in the list of classes, therefore no need to loop over and determine the class.
-                if (isset($typemappings[$type])) {
-                    $type = $typemappings[$type];
-                } else {
-                    // The value provided did not match a known type. It must be an extra class.
-                    $extraclasses = [$type];
-                }
-            } else {
-                // Identify what type of notification this is.
-                $classarray = explode(' ', self::prepare_classes($type));
-
-                // Separate out the type of notification from the extra classes.
-                foreach ($classarray as $class) {
-                    if (isset($typemappings[$class])) {
-                        $type = $typemappings[$class];
-                    } else {
-                        $extraclasses[] = $class;
-                    }
+        // Identify what type of notification this is.
+        $type = \core\output\notification::NOTIFY_PROBLEM;
+        $classarray = explode(' ', self::prepare_classes($classes));
+        if (count($classarray) > 0) {
+            foreach ($classarray as $class) {
+                if (isset($classmappings[$class])) {
+                    $type = $classmappings[$class];
+                    break;
                 }
             }
         }
 
-        $notification = new \core\output\notification($message, $type);
-        if (count($extraclasses)) {
-            $notification->set_extra_classes($extraclasses);
-        }
+        $n = new \core\output\notification($message, $type);
+        return $this->render($n);
 
-        // Return the rendered template.
-        return $this->render_from_template($notification->get_template_name(), $notification->export_for_template($this));
     }
 
     /**
@@ -2916,15 +2812,9 @@ EOD;
      *
      * @param string $message the message to print out
      * @return string HTML fragment.
-     * @deprecated since Moodle 3.1 MDL-30811 - please do not use this function any more.
-     * @todo MDL-53113 This will be removed in Moodle 3.5.
-     * @see \core\output\notification
      */
     public function notify_problem($message) {
-        debugging(__FUNCTION__ . ' is deprecated.' .
-            'Please use \core\notification::add, or \core\output\notification as required',
-            DEBUG_DEVELOPER);
-        $n = new \core\output\notification($message, \core\output\notification::NOTIFY_ERROR);
+        $n = new \core\output\notification($message, \core\output\notification::NOTIFY_PROBLEM);
         return $this->render($n);
     }
 
@@ -2933,14 +2823,8 @@ EOD;
      *
      * @param string $message the message to print out
      * @return string HTML fragment.
-     * @deprecated since Moodle 3.1 MDL-30811 - please do not use this function any more.
-     * @todo MDL-53113 This will be removed in Moodle 3.5.
-     * @see \core\output\notification
      */
     public function notify_success($message) {
-        debugging(__FUNCTION__ . ' is deprecated.' .
-            'Please use \core\notification::add, or \core\output\notification as required',
-            DEBUG_DEVELOPER);
         $n = new \core\output\notification($message, \core\output\notification::NOTIFY_SUCCESS);
         return $this->render($n);
     }
@@ -2950,15 +2834,9 @@ EOD;
      *
      * @param string $message the message to print out
      * @return string HTML fragment.
-     * @deprecated since Moodle 3.1 MDL-30811 - please do not use this function any more.
-     * @todo MDL-53113 This will be removed in Moodle 3.5.
-     * @see \core\output\notification
      */
     public function notify_message($message) {
-        debugging(__FUNCTION__ . ' is deprecated.' .
-            'Please use \core\notification::add, or \core\output\notification as required',
-            DEBUG_DEVELOPER);
-        $n = new \core\output\notification($message, \core\output\notification::NOTIFY_INFO);
+        $n = new \core\output\notification($message, \core\output\notification::NOTIFY_MESSAGE);
         return $this->render($n);
     }
 
@@ -2967,15 +2845,9 @@ EOD;
      *
      * @param string $message the message to print out
      * @return string HTML fragment.
-     * @deprecated since Moodle 3.1 MDL-30811 - please do not use this function any more.
-     * @todo MDL-53113 This will be removed in Moodle 3.5.
-     * @see \core\output\notification
      */
     public function notify_redirect($message) {
-        debugging(__FUNCTION__ . ' is deprecated.' .
-            'Please use \core\notification::add, or \core\output\notification as required',
-            DEBUG_DEVELOPER);
-        $n = new \core\output\notification($message, \core\output\notification::NOTIFY_INFO);
+        $n = new \core\output\notification($message, \core\output\notification::NOTIFY_REDIRECT);
         return $this->render($n);
     }
 
@@ -2987,7 +2859,30 @@ EOD;
      * @return string the HTML to output.
      */
     protected function render_notification(\core\output\notification $notification) {
-        return $this->render_from_template($notification->get_template_name(), $notification->export_for_template($this));
+
+        $data = $notification->export_for_template($this);
+
+        $templatename = '';
+        switch($data->type) {
+            case \core\output\notification::NOTIFY_MESSAGE:
+                $templatename = 'core/notification_message';
+                break;
+            case \core\output\notification::NOTIFY_SUCCESS:
+                $templatename = 'core/notification_success';
+                break;
+            case \core\output\notification::NOTIFY_PROBLEM:
+                $templatename = 'core/notification_problem';
+                break;
+            case \core\output\notification::NOTIFY_REDIRECT:
+                $templatename = 'core/notification_redirect';
+                break;
+            default:
+                $templatename = 'core/notification_message';
+                break;
+        }
+
+        return self::render_from_template($templatename, $data);
+
     }
 
     /**
@@ -3051,7 +2946,7 @@ EOD;
             }
 
             if (!empty($pagingbar->lastlink)) {
-                $output .= ' ... ' . $pagingbar->lastlink . ' ';
+                $output .= ' ...' . $pagingbar->lastlink . ' ';
             }
 
             if (!empty($pagingbar->nextlink)) {
@@ -3222,45 +3117,6 @@ EOD;
     }
 
     /**
-     * Returns a search box.
-     *
-     * @param  string $id     The search box wrapper div id, defaults to an autogenerated one.
-     * @return string         HTML with the search form hidden by default.
-     */
-    public function search_box($id = false) {
-        global $CFG;
-
-        // Accessing $CFG directly as using \core_search::is_global_search_enabled would
-        // result in an extra included file for each site, even the ones where global search
-        // is disabled.
-        if (empty($CFG->enableglobalsearch) || !has_capability('moodle/search:query', context_system::instance())) {
-            return '';
-        }
-
-        if ($id == false) {
-            $id = uniqid();
-        } else {
-            // Needs to be cleaned, we use it for the input id.
-            $id = clean_param($id, PARAM_ALPHANUMEXT);
-        }
-
-        // JS to animate the form.
-        $this->page->requires->js_call_amd('core/search-input', 'init', array($id));
-
-        $searchicon = html_writer::tag('div', $this->pix_icon('a/search', get_string('search', 'search'), 'moodle'),
-            array('role' => 'button', 'tabindex' => 0));
-        $formattrs = array('class' => 'search-input-form', 'action' => $CFG->wwwroot . '/search/index.php');
-        $inputattrs = array('type' => 'text', 'name' => 'q', 'placeholder' => get_string('search', 'search'),
-            'size' => 13, 'tabindex' => -1, 'id' => 'id_q_' . $id);
-
-        $contents = html_writer::tag('label', get_string('enteryoursearchquery', 'search'),
-            array('for' => 'id_q_' . $id, 'class' => 'accesshide')) . html_writer::tag('input', '', $inputattrs);
-        $searchinput = html_writer::tag('form', $contents, $formattrs);
-
-        return html_writer::tag('div', $searchicon . $searchinput, array('class' => 'search-input-wrapper', 'id' => $id));
-    }
-
-    /**
      * Construct a user menu, returning HTML that can be echoed out by a
      * layout file.
      *
@@ -3428,16 +3284,12 @@ EOD;
                                 array('class' => 'iconsmall')
                             ) . $value->title;
                         }
-
                         $al = new action_menu_link_secondary(
                             $value->url,
                             $pix,
                             $value->title,
                             array('class' => 'icon')
                         );
-                        if (!empty($value->titleidentifier)) {
-                            $al->attributes['data-title'] = $value->titleidentifier;
-                        }
                         $am->add($al);
                         break;
                 }
@@ -3484,46 +3336,10 @@ EOD;
         }
 
         //accessibility: heading for navbar list  (MDL-20446)
-        $navbarcontent = html_writer::tag('span', get_string('pagepath'),
-                array('class' => 'accesshide', 'id' => 'navbar-label'));
-        $navbarcontent .= html_writer::tag('nav',
-                html_writer::tag('ul', join('', $htmlblocks)),
-                array('aria-labelledby' => 'navbar-label'));
+        $navbarcontent = html_writer::tag('span', get_string('pagepath'), array('class'=>'accesshide'));
+        $navbarcontent .= html_writer::tag('nav', html_writer::tag('ul', join('', $htmlblocks)));
         // XHTML
         return $navbarcontent;
-    }
-
-    /**
-     * Renders a breadcrumb navigation node object.
-     *
-     * @param breadcrumb_navigation_node $item The navigation node to render.
-     * @return string HTML fragment
-     */
-    protected function render_breadcrumb_navigation_node(breadcrumb_navigation_node $item) {
-
-        if ($item->action instanceof moodle_url) {
-            $content = $item->get_content();
-            $title = $item->get_title();
-            $attributes = array();
-            $attributes['itemprop'] = 'url';
-            if ($title !== '') {
-                $attributes['title'] = $title;
-            }
-            if ($item->hidden) {
-                $attributes['class'] = 'dimmed_text';
-            }
-            $content = html_writer::tag('span', $content, array('itemprop' => 'title'));
-            $content = html_writer::link($item->action, $content, $attributes);
-
-            $attributes = array();
-            $attributes['itemscope'] = '';
-            $attributes['itemtype'] = 'http://data-vocabulary.org/Breadcrumb';
-            $content = html_writer::tag('span', $content, $attributes);
-
-        } else {
-            $content = $this->render_navigation_node($item);
-        }
-        return $content;
     }
 
     /**
@@ -4137,16 +3953,16 @@ EOD;
      */
     public function context_header($headerinfo = null, $headinglevel = 1) {
         global $DB, $USER, $CFG;
-        require_once($CFG->dirroot . '/user/lib.php');
         $context = $this->page->context;
-        $heading = null;
-        $imagedata = null;
-        $subheader = null;
-        $userbuttons = null;
         // Make sure to use the heading if it has been set.
         if (isset($headerinfo['heading'])) {
             $heading = $headerinfo['heading'];
+        } else {
+            $heading = null;
         }
+        $imagedata = null;
+        $subheader = null;
+        $userbuttons = null;
         // The user context currently has images and buttons. Other contexts may follow.
         if (isset($headerinfo['user']) || $context->contextlevel == CONTEXT_USER) {
             if (isset($headerinfo['user'])) {
@@ -4155,42 +3971,29 @@ EOD;
                 // Look up the user information if it is not supplied.
                 $user = $DB->get_record('user', array('id' => $context->instanceid));
             }
-
             // If the user context is set, then use that for capability checks.
             if (isset($headerinfo['usercontext'])) {
                 $context = $headerinfo['usercontext'];
             }
-
-            // Only provide user information if the user is the current user, or a user which the current user can view.
-            $canviewdetails = false;
-            if ($user->id == $USER->id || user_can_view_profile($user)) {
-                $canviewdetails = true;
+            // Use the user's full name if the heading isn't set.
+            if (!isset($heading)) {
+                $heading = fullname($user);
             }
 
-            if ($canviewdetails) {
-                // Use the user's full name if the heading isn't set.
-                if (!isset($heading)) {
-                    $heading = fullname($user);
-                }
-
-                $imagedata = $this->user_picture($user, array('size' => 100));
-
-                // Check to see if we should be displaying a message button.
-                if (!empty($CFG->messaging) && $USER->id != $user->id && has_capability('moodle/site:sendmessage', $context)) {
-                    $userbuttons = array(
-                        'messages' => array(
-                            'buttontype' => 'message',
-                            'title' => get_string('message', 'message'),
-                            'url' => new moodle_url('/message/index.php', array('id' => $user->id)),
-                            'image' => 'message',
-                            'linkattributes' => message_messenger_sendmessage_link_params($user),
-                            'page' => $this->page
-                        )
-                    );
-                    $this->page->requires->string_for_js('changesmadereallygoaway', 'moodle');
-                }
-            } else {
-                $heading = null;
+            $imagedata = $this->user_picture($user, array('size' => 100));
+            // Check to see if we should be displaying a message button.
+            if (!empty($CFG->messaging) && $USER->id != $user->id && has_capability('moodle/site:sendmessage', $context)) {
+                $userbuttons = array(
+                    'messages' => array(
+                        'buttontype' => 'message',
+                        'title' => get_string('message', 'message'),
+                        'url' => new moodle_url('/message/index.php', array('id' => $user->id)),
+                        'image' => 'message',
+                        'linkattributes' => message_messenger_sendmessage_link_params($user),
+                        'page' => $this->page
+                    )
+                );
+                $this->page->requires->string_for_js('changesmadereallygoaway', 'moodle');
             }
         }
 
@@ -4262,39 +4065,12 @@ EOD;
         $html = html_writer::start_tag('header', array('id' => 'page-header', 'class' => 'clearfix'));
         $html .= $this->context_header();
         $html .= html_writer::start_div('clearfix', array('id' => 'page-navbar'));
-        $html .= html_writer::tag('div', $this->navbar(), array('class' => 'breadcrumb-nav'));
+        $html .= html_writer::tag('nav', $this->navbar(), array('class' => 'breadcrumb-nav'));
         $html .= html_writer::div($this->page_heading_button(), 'breadcrumb-button');
         $html .= html_writer::end_div();
         $html .= html_writer::tag('div', $this->course_header(), array('id' => 'course-header'));
         $html .= html_writer::end_tag('header');
         return $html;
-    }
-
-    /**
-     * Displays the list of tags associated with an entry
-     *
-     * @param array $tags list of instances of core_tag or stdClass
-     * @param string $label label to display in front, by default 'Tags' (get_string('tags')), set to null
-     *               to use default, set to '' (empty string) to omit the label completely
-     * @param string $classes additional classes for the enclosing div element
-     * @param int $limit limit the number of tags to display, if size of $tags is more than this limit the "more" link
-     *               will be appended to the end, JS will toggle the rest of the tags
-     * @param context $pagecontext specify if needed to overwrite the current page context for the view tag link
-     * @return string
-     */
-    public function tag_list($tags, $label = null, $classes = '', $limit = 10, $pagecontext = null) {
-        $list = new \core_tag\output\taglist($tags, $label, $classes, $limit, $pagecontext);
-        return $this->render_from_template('core_tag/taglist', $list->export_for_template($this));
-    }
-
-    /**
-     * Renders element for inline editing of any value
-     *
-     * @param \core\output\inplace_editable $element
-     * @return string
-     */
-    public function render_inplace_editable(\core\output\inplace_editable $element) {
-        return $this->render_from_template('core/inplace_editable', $element->export_for_template($this));
     }
 }
 
@@ -4351,7 +4127,7 @@ class core_renderer_cli extends core_renderer {
      * @param string $debuginfo Debugging information
      * @return string A template fragment for a fatal error
      */
-    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null, $errorcode = "") {
+    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null) {
         global $CFG;
 
         $output = "!!! $message !!!\n";
@@ -4371,13 +4147,13 @@ class core_renderer_cli extends core_renderer {
     /**
      * Returns a template fragment representing a notification.
      *
-     * @param string $message The message to print out.
-     * @param string $type    The type of notification. See constants on \core\output\notification.
+     * @param string $message The message to include
+     * @param string $classes A space-separated list of CSS classes
      * @return string A template fragment for a notification
      */
-    public function notification($message, $type = null) {
+    public function notification($message, $classes = 'notifyproblem') {
         $message = clean_text($message);
-        if ($type === 'notifysuccess' || $type === 'success') {
+        if ($classes === 'notifysuccess') {
             return "++ $message ++\n";
         }
         return "!! $message !!\n";
@@ -4388,17 +4164,6 @@ class core_renderer_cli extends core_renderer {
      * footer method to prevent the default footer.
      */
     public function footer() {}
-
-    /**
-     * Render a notification (that is, a status message about something that has
-     * just happened).
-     *
-     * @param \core\output\notification $notification the notification to print out
-     * @return string plain text output
-     */
-    public function render_notification(\core\output\notification $notification) {
-        return $this->notification($notification->get_message(), $notification->get_message_type());
-    }
 }
 
 
@@ -4426,14 +4191,13 @@ class core_renderer_ajax extends core_renderer {
      * @param string $debuginfo Debugging information
      * @return string A template fragment for a fatal error
      */
-    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null, $errorcode = "") {
+    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null) {
         global $CFG;
 
         $this->page->set_context(null); // ugly hack - make sure page context is set to something, we do not want bogus warnings here
 
         $e = new stdClass();
         $e->error      = $message;
-        $e->errorcode  = $errorcode;
         $e->stacktrace = NULL;
         $e->debuginfo  = NULL;
         $e->reproductionlink = NULL;
@@ -4457,10 +4221,10 @@ class core_renderer_ajax extends core_renderer {
      * Used to display a notification.
      * For the AJAX notifications are discarded.
      *
-     * @param string $message The message to print out.
-     * @param string $type    The type of notification. See constants on \core\output\notification.
+     * @param string $message
+     * @param string $classes
      */
-    public function notification($message, $type = null) {}
+    public function notification($message, $classes = 'notifyproblem') {}
 
     /**
      * Used to display a redirection message.
@@ -4471,11 +4235,8 @@ class core_renderer_ajax extends core_renderer {
      * @param string $message
      * @param int $delay
      * @param bool $debugdisableredirect
-     * @param string $messagetype The type of notification to show the message in.
-     *         See constants on \core\output\notification.
      */
-    public function redirect_message($encodedurl, $message, $delay, $debugdisableredirect,
-                                     $messagetype = \core\output\notification::NOTIFY_INFO) {}
+    public function redirect_message($encodedurl, $message, $delay, $debugdisableredirect) {}
 
     /**
      * Prepares the start of an AJAX output.

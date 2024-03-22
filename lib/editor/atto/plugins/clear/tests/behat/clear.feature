@@ -5,7 +5,8 @@ Feature: Atto clear button
   @javascript
   Scenario: Clear formatting
     Given I log in as "admin"
-    And I open my profile in edit mode
+    And I follow "Profile" in the user menu
+    And I follow "Edit profile"
     And I set the field "Description" to "Pisa"
     And I select the text in the "Description" Atto editor
     And I click on "Italic" "button"

@@ -47,12 +47,9 @@ class auth_plugin_cas extends auth_plugin_ldap {
     }
 
     /**
-     * Old syntax of class constructor. Deprecated in PHP7.
-     *
-     * @deprecated since Moodle 3.1
+     * Old syntax of class constructor for backward compatibility.
      */
     public function auth_plugin_cas() {
-        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
         self::__construct();
     }
 
@@ -154,7 +151,6 @@ class auth_plugin_cas extends auth_plugin_ldap {
             $frm = new stdClass();
             $frm->username = phpCAS::getUser();
             $frm->password = 'passwdCas';
-            $frm->logintoken = \core\session\manager::get_login_token();
 
             // Redirect to a course if multi-auth is activated, authCAS is set to CAS and the courseid is specified.
             if ($this->config->multiauth && !empty($courseid)) {
@@ -168,7 +164,6 @@ class auth_plugin_cas extends auth_plugin_ldap {
             $frm = new stdClass();
             $frm->username = 'guest';
             $frm->password = 'guest';
-            $frm->logintoken = \core\session\manager::get_login_token();
             return;
         }
 

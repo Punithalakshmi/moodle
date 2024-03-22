@@ -983,7 +983,6 @@ function message_format_message_text($message, $forcetexttohtml = false) {
 
     $options = new stdClass();
     $options->para = false;
-    $options->blanktarget = true;
 
     $format = $message->fullmessageformat;
 
@@ -1407,7 +1406,7 @@ function message_print_search_results($frm, $showicontext=false, $currentuser=nu
             $headertdend   = html_writer::end_tag('td');
             echo html_writer::start_tag('tr');
             echo $headertdstart.get_string('from').$headertdend;
-            echo $headertdstart.get_string('addressedto').$headertdend;
+            echo $headertdstart.get_string('to').$headertdend;
             echo $headertdstart.get_string('message', 'message').$headertdend;
             echo $headertdstart.get_string('timesent', 'message').$headertdend;
             echo html_writer::end_tag('tr');
@@ -1430,9 +1429,6 @@ function message_print_search_results($frm, $showicontext=false, $currentuser=nu
                 // Load user-to record.
                 if ($message->useridto !== $USER->id) {
                     $userto = core_user::get_user($message->useridto);
-                    if ($userto === false) {
-                        $userto = core_user::get_noreply_user();
-                    }
                     $tocontact = (array_key_exists($message->useridto, $contacts) and
                                     ($contacts[$message->useridto]->blocked == 0) );
                     $toblocked = (array_key_exists($message->useridto, $contacts) and
@@ -1446,9 +1442,6 @@ function message_print_search_results($frm, $showicontext=false, $currentuser=nu
                 // Load user-from record.
                 if ($message->useridfrom !== $USER->id) {
                     $userfrom = core_user::get_user($message->useridfrom);
-                    if ($userfrom === false) {
-                        $userfrom = core_user::get_noreply_user();
-                    }
                     $fromcontact = (array_key_exists($message->useridfrom, $contacts) and
                                     ($contacts[$message->useridfrom]->blocked == 0) );
                     $fromblocked = (array_key_exists($message->useridfrom, $contacts) and
@@ -1555,11 +1548,10 @@ function message_print_user ($user=false, $iscontact=false, $isblocked=false, $i
         } else {
             message_contact_link($user->id, 'block', $return, $script, $includeicontext);
         }
-    } else {
-        // If not real user, then don't show any links.
+    } else { // If not real user, then don't show any links.
         $userpictureparams['link'] = false;
-        // Stock profile picture should be displayed.
-        echo $OUTPUT->user_picture($user, $userpictureparams);
+        echo $OUTPUT->user_picture($USER, $userpictureparams);
+        echo fullname($user);
     }
 }
 
@@ -2276,8 +2268,8 @@ function message_format_message($message, $format='', $keywords='', $class='othe
 
     return <<<TEMPLATE
 <div class='message $class'>
-    <a name="m{$message->id}"></a><span class="message-meta"><span class="time">$time</span></span>:
-    <span class="text">$messagetext</span>
+    <a name="m{$message->id}"></a>
+    <span class="message-meta"><span class="time">$time</span></span>: <span class="text">$messagetext</span>
 </div>
 TEMPLATE;
 }

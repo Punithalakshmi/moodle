@@ -572,7 +572,9 @@ class lesson_display_answer_form_matching extends moodleform {
                     // Temporary fixed until MDL-38885 gets integrated
                     $mform->setType('response', PARAM_TEXT);
                 }
-                $answer = lesson_page_type_matching::rewrite_answers_urls($answer);
+                $context = context_module::instance($PAGE->cm->id);
+                $answer->answer = file_rewrite_pluginfile_urls($answer->answer, 'pluginfile.php', $context->id,
+                        'mod_lesson', 'page_answers', $answer->id);
                 $mform->addElement('select', $responseid, format_text($answer->answer,$answer->answerformat,$options), $responseoptions, $disabled);
                 $mform->setType($responseid, PARAM_TEXT);
                 if ($hasattempt) {

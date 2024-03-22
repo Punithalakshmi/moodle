@@ -3670,7 +3670,7 @@ class core_dml_testcase extends database_driver_testcase {
 
         $DB->insert_record($tablename, array('name'=>'10.10', 'nametext'=>'10.10', 'res'=>5.1));
         $DB->insert_record($tablename, array('name'=>'91.10', 'nametext'=>'91.10', 'res'=>666));
-        $DB->insert_record($tablename, array('name'=>'011.13333333', 'nametext'=>'011.13333333', 'res'=>10.1));
+        $DB->insert_record($tablename, array('name'=>'011.10', 'nametext'=>'011.10', 'res'=>10.1));
 
         // Casting varchar field.
         $sql = "SELECT * FROM {{$tablename}} WHERE ".$DB->sql_cast_char2real('name')." > res";
@@ -3681,11 +3681,8 @@ class core_dml_testcase extends database_driver_testcase {
         $records = $DB->get_records_sql($sql);
         $this->assertCount(3, $records);
         $this->assertSame('10.10', reset($records)->name);
-        $this->assertSame('011.13333333', next($records)->name);
+        $this->assertSame('011.10', next($records)->name);
         $this->assertSame('91.10', next($records)->name);
-        // And verify we can operate with them without too much problem with at least 6 decimals scale accuracy.
-        $sql = "SELECT AVG(" . $DB->sql_cast_char2real('name') . ") FROM {{$tablename}}";
-        $this->assertEquals(37.44444443333333, (float)$DB->get_field_sql($sql), '', 1.0E-6);
 
         // Casting text field.
         $sql = "SELECT * FROM {{$tablename}} WHERE ".$DB->sql_cast_char2real('nametext', true)." > res";
@@ -3696,19 +3693,8 @@ class core_dml_testcase extends database_driver_testcase {
         $records = $DB->get_records_sql($sql);
         $this->assertCount(3, $records);
         $this->assertSame('10.10', reset($records)->nametext);
-        $this->assertSame('011.13333333', next($records)->nametext);
+        $this->assertSame('011.10', next($records)->nametext);
         $this->assertSame('91.10', next($records)->nametext);
-        // And verify we can operate with them without too much problem with at least 6 decimals scale accuracy.
-        $sql = "SELECT AVG(" . $DB->sql_cast_char2real('nametext', true) . ") FROM {{$tablename}}";
-        $this->assertEquals(37.44444443333333, (float)$DB->get_field_sql($sql), '', 1.0E-6);
-
-        // Check it works with values passed as param.
-        $sql = "SELECT name FROM {{$tablename}} WHERE FLOOR(res - " . $DB->sql_cast_char2real(':param') . ") = 0";
-        $this->assertEquals('011.13333333', $DB->get_field_sql($sql, array('param' => '10.09999')));
-
-        // And also, although not recommended, with directly passed values.
-        $sql = "SELECT name FROM {{$tablename}} WHERE FLOOR(res - " . $DB->sql_cast_char2real('10.09999') . ") = 0";
-        $this->assertEquals('011.13333333', $DB->get_field_sql($sql));
     }
 
     public function test_sql_compare_text() {
@@ -5494,42 +5480,6 @@ class core_dml_testcase extends database_driver_testcase {
             $dbman->drop_table($table);
         }
     }
-
-    /**
-     * Test that the database has full utf8 support (4 bytes).
-     */
-    public function test_four_byte_character_insertion() {
-        $DB = $this->tdb;
-
-        if ($DB->get_dbfamily() === 'mysql' && strpos($DB->get_dbcollation(), 'utf8_') === 0) {
-            $this->markTestSkipped($DB->get_name() .
-                    ' does not support 4 byte characters with only a utf8 collation.
-                    Please change to utf8mb4 for full utf8 support.');
-        }
-
-        $dbman = $this->tdb->get_manager();
-
-        $table = $this->get_test_table();
-        $tablename = $table->getName();
-
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('name', XMLDB_TYPE_CHAR, '255', null, null, null, null);
-        $table->add_field('content', XMLDB_TYPE_TEXT, 'big', null, XMLDB_NOTNULL);
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-        $dbman->create_table($table);
-
-        $data = array(
-            'name' => 'Name with a four byte character 𠮟る',
-            'content' => 'Content with a four byte emoji 📝 memo.'
-        );
-
-        $insertid = $DB->insert_record($tablename, $data);
-        $result = $DB->get_record($tablename, array('id' => $insertid));
-        $this->assertEquals($data['name'], $result->name);
-        $this->assertEquals($data['content'], $result->content);
-
-        $dbman->drop_table($table);
-    }
 }
 
 /**
@@ -5560,7 +5510,7 @@ class moodle_database_for_testing extends moodle_database {
     protected function normalise_value($column, $value) {}
     public function set_debug($state) {}
     public function get_debug() {}
-    public function change_database_structure($sql, $tablenames = null) {}
+    public function change_database_structure($sql) {}
     public function execute($sql, array $params=null) {}
     public function get_recordset_sql($sql, array $params=null, $limitfrom=0, $limitnum=0) {}
     public function get_records_sql($sql, array $params=null, $limitfrom=0, $limitnum=0) {}

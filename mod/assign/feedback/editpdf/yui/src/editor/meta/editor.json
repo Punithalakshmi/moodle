@@ -9,7 +9,6 @@
         "json",
         "event-move",
         "event-resize",
-        "transition",
         "querystring-stringify-simple",
         "moodle-core-notification-dialog",
         "moodle-core-notification-exception",

@@ -3,6 +3,7 @@ Feature: In a lesson activity, a non editing teacher can grade essay questions
   As a non editing teacher
   I need to grade student answers to essay questions in lesson
 
+  @javascript
   Scenario: non editing teacher grade essay questions
     Given the following "users" exist:
       | username | firstname | lastname | email |
@@ -78,11 +79,11 @@ Feature: In a lesson activity, a non editing teacher can grade essay questions
       | Essay score | 1 |
     And I press "Save changes"
     And I should see "Changes saved"
-    And I select "Group A" from the "Separate groups" singleselect
+    And I set the field "Separate groups" to "Group A"
     And I should see "Student 1"
     And I should not see "Student 2"
-    And I select "Group B" from the "Separate groups" singleselect
+    And I set the field "Separate groups" to "Group B"
     And I should see "Student 2"
     And I should not see "Student 1"
-    And I select "Group C" from the "Separate groups" singleselect
+    And I set the field "Separate groups" to "Group C"
     And I should see "No one in Group C has answered an essay question yet."

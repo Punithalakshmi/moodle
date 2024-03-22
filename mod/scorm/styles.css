@@ -144,9 +144,7 @@
 }
 
 #page-mod-scorm-player #scormpage #scorm_toc.disabled,
-#page-mod-scorm-player #scormpage #scorm_toc.loading,
-#page-mod-scorm-player #scormpage #scorm_toc_toggle.disabled,
-#page-mod-scorm-player #scormpage #scorm_toc_toggle.loading {
+#page-mod-scorm-player #scormpage #scorm_toc_toggle.disabled {
     display: none;
 }
 
@@ -273,10 +271,6 @@
 #page-mod-scorm-player #scormpage div.yui3-g-r {
     *letter-spacing: normal;
     *word-spacing: -0.43em;
-}
-
-#scorm_layout {
-    margin-bottom: 50px;
 }
 
 /**

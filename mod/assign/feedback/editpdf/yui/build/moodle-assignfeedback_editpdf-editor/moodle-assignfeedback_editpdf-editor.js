@@ -14,7 +14,6 @@ YUI.add('moodle-assignfeedback_editpdf-editor', function (Y, NAME) {
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* eslint-disable no-unused-vars */
 
 /**
  * A list of globals used by this module.
@@ -43,7 +42,6 @@ var AJAXBASE = M.cfg.wwwroot + '/mod/assign/feedback/editpdf/ajax.php',
         ANNOTATIONCOLOURBUTTON :  '.annotationcolourbutton',
         DELETEANNOTATIONBUTTON : '.deleteannotationbutton',
         UNSAVEDCHANGESDIV : '.assignfeedback_editpdf_unsavedchanges',
-        UNSAVEDCHANGESINPUT : 'input[name="assignfeedback_editpdf_haschanges"]',
         STAMPSBUTTON : '.currentstampbutton',
         DIALOGUE : '.' + CSS.DIALOGUE
     },
@@ -75,7 +73,6 @@ var AJAXBASE = M.cfg.wwwroot + '/mod/assign/feedback/editpdf/ajax.php',
         'oval': '.ovalbutton',
         'stamp': '.stampbutton',
         'select': '.selectbutton',
-        'drag': '.dragbutton',
         'highlight': '.highlightbutton'
     },
     STROKEWEIGHT = 4;
@@ -362,7 +359,7 @@ var EDIT = function() {
      * @type String
      * @public
      */
-    this.tool = "drag";
+    this.tool = "comment";
 
     /**
      * The currently comment colour
@@ -413,7 +410,6 @@ M.assignfeedback_editpdf.edit = EDIT;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global SELECTOR */
 
 /**
  * Provides an in browser PDF editor.
@@ -526,7 +522,6 @@ M.assignfeedback_editpdf.drawable = DRAWABLE;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global STROKEWEIGHT, SELECTOR, SELECTEDBORDERCOLOUR, SELECTEDFILLCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
@@ -867,7 +862,6 @@ M.assignfeedback_editpdf.annotation = ANNOTATION;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global STROKEWEIGHT, ANNOTATIONCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
@@ -988,7 +982,6 @@ M.assignfeedback_editpdf.annotationline = ANNOTATIONLINE;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global STROKEWEIGHT, ANNOTATIONCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
@@ -1103,7 +1096,6 @@ M.assignfeedback_editpdf.annotationrectangle = ANNOTATIONRECTANGLE;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global STROKEWEIGHT, ANNOTATIONCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
@@ -1218,7 +1210,6 @@ M.assignfeedback_editpdf.annotationoval = ANNOTATIONOVAL;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global STROKEWEIGHT, ANNOTATIONCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
@@ -1379,7 +1370,6 @@ M.assignfeedback_editpdf.annotationpen = ANNOTATIONPEN;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global ANNOTATIONCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
@@ -1533,7 +1523,6 @@ M.assignfeedback_editpdf.annotationhighlight = ANNOTATIONHIGHLIGHT;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global SELECTOR */
 
 /**
  * Provides an in browser PDF editor.
@@ -1585,13 +1574,10 @@ Y.extend(ANNOTATIONSTAMP, M.assignfeedback_editpdf.annotation, {
         node.setY(position.y);
         drawable.store_position(node, position.x, position.y);
 
-        // Bind events only when editing.
-        if (!this.editor.get('readonly')) {
-            // Pass through the event handlers on the div.
-            node.on('gesturemovestart', this.editor.edit_start, null, this.editor);
-            node.on('gesturemove', this.editor.edit_move, null, this.editor);
-            node.on('gesturemoveend', this.editor.edit_end, null, this.editor);
-        }
+        // Pass throught the event handlers on the div.
+        node.on('gesturemovestart', this.editor.edit_start, null, this.editor);
+        node.on('gesturemove', this.editor.edit_move, null, this.editor);
+        node.on('gesturemoveend', this.editor.edit_end, null, this.editor);
 
         drawable.nodes.push(node);
 
@@ -2184,8 +2170,6 @@ Y.extend(COMMENTMENU, M.assignfeedback_editpdf.dropdown, {
 
 M.assignfeedback_editpdf = M.assignfeedback_editpdf || {};
 M.assignfeedback_editpdf.commentmenu = COMMENTMENU;
-/* eslint-disable no-unused-vars */
-/* global SELECTOR */
 var COMMENTSEARCHNAME = "commentsearch",
     COMMENTSEARCH;
 
@@ -2376,7 +2360,6 @@ M.assignfeedback_editpdf.commentsearch = COMMENTSEARCH;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global SELECTOR, COMMENTCOLOUR, COMMENTTEXTCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
@@ -2561,7 +2544,7 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
         drawable.store_position(container, position.x, position.y);
         drawable.nodes.push(container);
         node.set('value', this.rawtext);
-        scrollheight = node.get('scrollHeight');
+        scrollheight = node.get('scrollHeight'),
         node.setStyles({
             'height' : scrollheight + 'px',
             'overflow': 'hidden'
@@ -2630,50 +2613,43 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
         });
 
         node.on('gesturemovestart', function(e) {
-            if (editor.currentedit.tool === 'select') {
-                e.preventDefault();
-                node.setData('dragging', true);
-                node.setData('offsetx', e.clientX - node.getX());
-                node.setData('offsety', e.clientY - node.getY());
-            }
+            node.setData('dragging', true);
+            node.setData('offsetx', e.clientX - node.getX());
+            node.setData('offsety', e.clientY - node.getY());
         });
         node.on('gesturemoveend', function() {
-            if (editor.currentedit.tool === 'select') {
-                node.setData('dragging', false);
-                this.editor.save_current_page();
-            }
+            node.setData('dragging', false);
+            this.editor.save_current_page();
         }, null, this);
         node.on('gesturemove', function(e) {
-            if (editor.currentedit.tool === 'select') {
-                var x = e.clientX - node.getData('offsetx'),
-                    y = e.clientY - node.getData('offsety'),
-                    nodewidth,
-                    nodeheight,
-                    newlocation,
-                    windowlocation,
-                    bounds;
+            var x = e.clientX - node.getData('offsetx'),
+                y = e.clientY - node.getData('offsety'),
+                nodewidth,
+                nodeheight,
+                newlocation,
+                windowlocation,
+                bounds;
 
-                nodewidth = parseInt(node.getStyle('width'), 10);
-                nodeheight = parseInt(node.getStyle('height'), 10);
+            nodewidth = parseInt(node.getStyle('width'), 10);
+            nodeheight = parseInt(node.getStyle('height'), 10);
 
-                newlocation = this.editor.get_canvas_coordinates(new M.assignfeedback_editpdf.point(x, y));
-                bounds = this.editor.get_canvas_bounds(true);
-                bounds.x = 0;
-                bounds.y = 0;
+            newlocation = this.editor.get_canvas_coordinates(new M.assignfeedback_editpdf.point(x, y));
+            bounds = this.editor.get_canvas_bounds(true);
+            bounds.x = 0;
+            bounds.y = 0;
 
-                bounds.width -= nodewidth + 42;
-                bounds.height -= nodeheight + 8;
-                // Clip to the window size - the comment size.
-                newlocation.clip(bounds);
+            bounds.width -= nodewidth + 42;
+            bounds.height -= nodeheight + 8;
+            // Clip to the window size - the comment size.
+            newlocation.clip(bounds);
 
-                this.x = newlocation.x;
-                this.y = newlocation.y;
+            this.x = newlocation.x;
+            this.y = newlocation.y;
 
-                windowlocation = this.editor.get_window_coordinates(newlocation);
-                node.ancestor().setX(windowlocation.x);
-                node.ancestor().setY(windowlocation.y);
-                this.drawable.store_position(node.ancestor(), windowlocation.x, windowlocation.y);
-            }
+            windowlocation = this.editor.get_window_coordinates(newlocation);
+            node.ancestor().setX(windowlocation.x);
+            node.ancestor().setY(windowlocation.y);
+            this.drawable.store_position(node.ancestor(), windowlocation.x, windowlocation.y);
         }, null, this);
 
         this.menu = new M.assignfeedback_editpdf.commentmenu({
@@ -2891,7 +2867,6 @@ M.assignfeedback_editpdf.quickcomment = QUICKCOMMENT;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* global AJAXBASE */
 
 /**
  * Provides an in browser PDF editor.
@@ -3092,8 +3067,6 @@ M.assignfeedback_editpdf.quickcommentlist = QUICKCOMMENTLIST;
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-/* eslint-disable no-unused-vars */
-/* global SELECTOR, TOOLSELECTOR, AJAXBASE, COMMENTCOLOUR, ANNOTATIONCOLOUR, AJAXBASEPROGRESS, CLICKTIMEOUT */
 
 /**
  * Provides an in browser PDF editor.
@@ -3123,15 +3096,6 @@ EDITOR.prototype = {
      * @protected
      */
     dialogue : null,
-
-    /**
-     * The panel used for all action menu displays.
-     *
-     * @property type
-     * @type Y.Node
-     * @protected
-     */
-    panel : null,
 
     /**
      * The number of pages in the pdf.
@@ -3236,7 +3200,7 @@ EDITOR.prototype = {
      * @type String
      * @protected
      */
-    lastannotationtool: "pen",
+    lastanntationtool : "pen",
 
     /**
      * The users comments quick list
@@ -3294,24 +3258,11 @@ EDITOR.prototype = {
             link.on('click', this.link_handler, this);
             link.on('key', this.link_handler, 'down:13', this);
 
-            // We call the amd module to see if we can take control of the review panel.
-            require(['mod_assign/grading_review_panel'], function(ReviewPanelManager) {
-                var panelManager = new ReviewPanelManager();
-
-                var panel = panelManager.getReviewPanel('assignfeedback_editpdf');
-                if (panel) {
-                    panel = Y.one(panel);
-                    panel.empty();
-                    link.ancestor('.fitem').hide();
-                    this.open_in_panel(panel);
-                }
-                this.currentedit.start = false;
-                this.currentedit.end = false;
-                if (!this.get('readonly')) {
-                    this.quicklist = new M.assignfeedback_editpdf.quickcommentlist(this);
-                }
-            }.bind(this));
-
+            this.currentedit.start = false;
+            this.currentedit.end = false;
+            if (!this.get('readonly')) {
+                this.quicklist = new M.assignfeedback_editpdf.quickcommentlist(this);
+            }
         }
     },
 
@@ -3320,7 +3271,7 @@ EDITOR.prototype = {
      * @method refresh_button_state
      */
     refresh_button_state : function() {
-        var button, currenttoolnode, imgurl, drawingregion;
+        var button, currenttoolnode, imgurl;
 
         // Initalise the colour buttons.
         button = this.get_dialogue_element(SELECTOR.COMMENTCOLOURBUTTON);
@@ -3341,8 +3292,6 @@ EDITOR.prototype = {
         currenttoolnode = this.get_dialogue_element(TOOLSELECTOR[this.currentedit.tool]);
         currenttoolnode.addClass('assignfeedback_editpdf_selectedbutton');
         currenttoolnode.setAttribute('aria-pressed', 'true');
-        drawingregion = this.get_dialogue_element(SELECTOR.DRAWINGREGION);
-        drawingregion.setAttribute('data-currenttool', this.currentedit.tool);
 
         button = this.get_dialogue_element(SELECTOR.STAMPSBUTTON);
         button.one('img').setAttrs({'src': this.get_stamp_image_url(this.currentedit.stamp),
@@ -3390,36 +3339,6 @@ EDITOR.prototype = {
             newpoint = new M.assignfeedback_editpdf.point(point.x + bounds.x, point.y + bounds.y);
 
         return newpoint;
-    },
-
-    /**
-     * Open the edit-pdf editor in the panel in the page instead of a popup.
-     * @method open_in_panel
-     */
-    open_in_panel : function(panel) {
-        var drawingcanvas, drawingregion;
-
-        this.panel = panel;
-        panel.append(this.get('body'));
-        panel.addClass(CSS.DIALOGUE);
-
-        this.loadingicon = this.get_dialogue_element(SELECTOR.LOADINGICON);
-
-        drawingcanvas = this.get_dialogue_element(SELECTOR.DRAWINGCANVAS);
-        this.graphic = new Y.Graphic({render : drawingcanvas});
-
-        drawingregion = this.get_dialogue_element(SELECTOR.DRAWINGREGION);
-        drawingregion.on('scroll', this.move_canvas, this);
-
-        if (!this.get('readonly')) {
-            drawingcanvas.on('gesturemovestart', this.edit_start, null, this);
-            drawingcanvas.on('gesturemove', this.edit_move, null, this);
-            drawingcanvas.on('gesturemoveend', this.edit_end, null, this);
-
-            this.refresh_button_state();
-        }
-
-        this.load_all_pages();
     },
 
     /**
@@ -3539,9 +3458,7 @@ EDITOR.prototype = {
                             }
 
                             // New ajax request delayed of a second.
-                            M.util.js_pending('checkconversionstatus');
                             Y.later(1000, this, function () {
-                                M.util.js_complete('checkconversionstatus');
                                 Y.io(AJAXBASEPROGRESS, checkconversionstatus);
                             });
                         }
@@ -3551,9 +3468,7 @@ EDITOR.prototype = {
                         // We only continue on error if the all pages were not generated,
                         // and if the ajax call did not produce 5 errors in the row.
                         if (this.pagecount === 0 && ajax_error_total < 5) {
-                            M.util.js_pending('checkconversionstatus');
                             Y.later(1000, this, function () {
-                                M.util.js_complete('checkconversionstatus');
                                 Y.io(AJAXBASEPROGRESS, checkconversionstatus);
                             });
                         }
@@ -3563,10 +3478,8 @@ EDITOR.prototype = {
             };
             // We start the AJAX "generated page total number" call a second later to give a chance to
             // the AJAX "combined pdf generation" call to clean the previous submission images.
-            M.util.js_pending('checkconversionstatus');
             Y.later(1000, this, function () {
                 ajax_error_total = 0;
-                M.util.js_complete('checkconversionstatus');
                 Y.io(AJAXBASEPROGRESS, checkconversionstatus);
             });
         }
@@ -3583,18 +3496,14 @@ EDITOR.prototype = {
         try {
             data = Y.JSON.parse(responsetext);
             if (data.error || !data.pagecount) {
-                if (this.dialogue) {
-                    this.dialogue.hide();
-                }
+                this.dialogue.hide();
                 // Display alert dialogue.
                 error = new M.core.alert({ message: M.util.get_string('cannotopenpdf', 'assignfeedback_editpdf') });
                 error.show();
                 return;
             }
         } catch (e) {
-            if (this.dialogue) {
-                this.dialogue.hide();
-            }
+            this.dialogue.hide();
             // Display alert dialogue.
             error = new M.core.alert({ title: M.util.get_string('cannotopenpdf', 'assignfeedback_editpdf')});
             error.show();
@@ -3762,8 +3671,7 @@ EDITOR.prototype = {
         currenttoolnode.removeClass('assignfeedback_editpdf_selectedbutton');
         currenttoolnode.setAttribute('aria-pressed', 'false');
         this.currentedit.tool = tool;
-
-        if (tool !== "comment" && tool !== "select" && tool !== "drag" && tool !== "stamp") {
+        if (tool !== "comment" && tool !== "select" && tool !== "stamp") {
             this.lastannotationtool = tool;
         }
         this.refresh_button_state();
@@ -3826,11 +3734,7 @@ EDITOR.prototype = {
      * @method get_dialogue_element
      */
     get_dialogue_element : function(selector) {
-        if (this.panel) {
-            return this.panel.one(selector);
-        } else {
-            return this.dialogue.get('boundingBox').one(selector);
-        }
+        return this.dialogue.get('boundingBox').one(selector);
     },
 
     /**
@@ -3925,12 +3829,9 @@ EDITOR.prototype = {
         e.preventDefault();
         var bounds = this.get_canvas_bounds(),
             canvas = this.get_dialogue_element(SELECTOR.DRAWINGCANVAS),
-            drawingregion = this.get_dialogue_element(SELECTOR.DRAWINGREGION),
             clientpoint = new M.assignfeedback_editpdf.point(e.clientX + canvas.get('docScrollX'),
                                                              e.clientY + canvas.get('docScrollY')),
-            point = this.get_canvas_coordinates(clientpoint),
-            diffX,
-            diffY;
+            point = this.get_canvas_coordinates(clientpoint);
 
         // Ignore events out of the canvas area.
         if (point.x < 0 || point.x > bounds.width || point.y < 0 || point.y > bounds.height) {
@@ -3946,13 +3847,6 @@ EDITOR.prototype = {
                 this.currentannotation.move( this.currentedit.annotationstart.x + point.x - this.currentedit.start.x,
                                              this.currentedit.annotationstart.y + point.y - this.currentedit.start.y);
             }
-        } else if (this.currentedit.tool === 'drag') {
-            diffX = point.x - this.currentedit.start.x;
-            diffY = point.y - this.currentedit.start.y;
-
-            drawingregion.getDOMNode().scrollLeft -= diffX;
-            drawingregion.getDOMNode().scrollTop -= diffY;
-
         } else {
             if (this.currentedit.start) {
                 this.currentedit.end = point;
@@ -4021,12 +3915,10 @@ EDITOR.prototype = {
     resize : function() {
         var drawingregion, drawregionheight;
 
-        if (this.dialogue) {
-            if (!this.dialogue.get('visible')) {
-                return;
-            }
-            this.dialogue.centerDialogue();
+        if (!this.dialogue.get('visible')) {
+            return;
         }
+        this.dialogue.centerDialogue();
 
         // Make sure the dialogue box is not bigger than the max height of the viewport.
         drawregionheight = Y.one('body').get('winHeight') - 120; // Space for toolbar + titlebar.
@@ -4034,9 +3926,7 @@ EDITOR.prototype = {
             drawregionheight = 100;
         }
         drawingregion = this.get_dialogue_element(SELECTOR.DRAWINGREGION);
-        if (this.dialogue) {
-            drawingregion.setStyle('maxHeight', drawregionheight +'px');
-        }
+        drawingregion.setStyle('maxHeight', drawregionheight +'px');
         this.redraw();
         return true;
     },
@@ -4095,16 +3985,8 @@ EDITOR.prototype = {
                         if (jsondata.error) {
                             return new M.core.ajaxException(jsondata);
                         }
-                        Y.one(SELECTOR.UNSAVEDCHANGESINPUT).set('value', 'true');
-                        Y.one(SELECTOR.UNSAVEDCHANGESDIV).setStyle('opacity', 1);
-                        Y.one(SELECTOR.UNSAVEDCHANGESDIV).setStyle('display', 'inline-block');
-                        Y.one(SELECTOR.UNSAVEDCHANGESDIV).transition({
-                            duration: 1,
-                            delay: 2,
-                            opacity: 0
-                        }, function() {
-                            Y.one(SELECTOR.UNSAVEDCHANGESDIV).setStyle('display', 'none');
-                        });
+                        Y.one('#' + this.get('linkid')).siblings(SELECTOR.UNSAVEDCHANGESDIV)
+                            .item(0).addClass('haschanges');
                     } catch (e) {
                         return new M.core.exception(e);
                     }
@@ -4194,7 +4076,7 @@ EDITOR.prototype = {
         drawingcanvas.setStyle('height', page.height + 'px');
 
         // Update page select.
-        this.get_dialogue_element(SELECTOR.PAGESELECT).set('selectedIndex', this.currentpage);
+        this.get_dialogue_element(SELECTOR.PAGESELECT).set('value', this.currentpage);
 
         this.resize(); // Internally will call 'redraw', after checking the dialogue size.
     },
@@ -4208,7 +4090,6 @@ EDITOR.prototype = {
     setup_navigation : function() {
         var pageselect,
             i,
-            strinfo,
             option,
             previousbutton,
             nextbutton;
@@ -4220,8 +4101,7 @@ EDITOR.prototype = {
             for (i = 0; i < this.pages.length; i++) {
                 option = Y.Node.create('<option/>');
                 option.setAttribute('value', i);
-                strinfo = {page: i+1, total: this.pages.length};
-                option.setHTML(M.util.get_string('pagexofy', 'assignfeedback_editpdf', strinfo));
+                option.setHTML(M.util.get_string('pagenumber', 'assignfeedback_editpdf', i+1));
                 pageselect.append(option);
             }
         }
@@ -4347,8 +4227,7 @@ M.assignfeedback_editpdf.editor = M.assignfeedback_editpdf.editor || {};
  * @param {Object} params
  */
 M.assignfeedback_editpdf.editor.init = M.assignfeedback_editpdf.editor.init || function(params) {
-    M.assignfeedback_editpdf.instance =  new EDITOR(params);
-    return M.assignfeedback_editpdf.instance;
+    return new EDITOR(params);
 };
 
 
@@ -4362,7 +4241,6 @@ M.assignfeedback_editpdf.editor.init = M.assignfeedback_editpdf.editor.init || f
         "json",
         "event-move",
         "event-resize",
-        "transition",
         "querystring-stringify-simple",
         "moodle-core-notification-dialog",
         "moodle-core-notification-exception",

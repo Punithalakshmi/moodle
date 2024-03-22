@@ -62,9 +62,17 @@ $wikipage = new page_wiki_prettyview($wiki, $subwiki, $cm);
 $wikipage->set_page($page);
 
 $context = context_module::instance($cm->id);
-
-$other = array('prettyview' => true);
-wiki_page_view($wiki, $page, $course, $cm, $context, null, $other, $subwiki);
+$event = \mod_wiki\event\page_viewed::create(
+        array(
+            'context' => $context,
+            'objectid' => $pageid,
+            'other' => array('prettyview' => true)
+            )
+        );
+$event->add_record_snapshot('wiki_pages', $page);
+$event->add_record_snapshot('wiki', $wiki);
+$event->add_record_snapshot('wiki_subwikis', $subwiki);
+$event->trigger();
 
 $wikipage->print_header();
 $wikipage->print_content();

@@ -341,7 +341,6 @@ $cache = '.var_export($cache, true).';
         $info = array(
             'access'      => null,
             'admin'       => $CFG->dirroot.'/'.$CFG->admin,
-            'antivirus'   => $CFG->dirroot . '/lib/antivirus',
             'auth'        => $CFG->dirroot.'/auth',
             'availability' => $CFG->dirroot . '/availability',
             'backup'      => $CFG->dirroot.'/backup/util/ui',
@@ -353,7 +352,6 @@ $cache = '.var_export($cache, true).';
             'calendar'    => $CFG->dirroot.'/calendar',
             'cohort'      => $CFG->dirroot.'/cohort',
             'comment'     => $CFG->dirroot.'/comment',
-            'competency'  => $CFG->dirroot.'/competency',
             'completion'  => $CFG->dirroot.'/completion',
             'countries'   => null,
             'course'      => $CFG->dirroot.'/course',
@@ -399,7 +397,7 @@ $cache = '.var_export($cache, true).';
             'repository'  => $CFG->dirroot.'/repository',
             'rss'         => $CFG->dirroot.'/rss',
             'role'        => $CFG->dirroot.'/'.$CFG->admin.'/roles',
-            'search'      => $CFG->dirroot.'/search',
+            'search'      => null,
             'table'       => null,
             'tag'         => $CFG->dirroot.'/tag',
             'timezones'   => null,
@@ -419,7 +417,6 @@ $cache = '.var_export($cache, true).';
         global $CFG;
 
         $types = array(
-            'antivirus'     => $CFG->dirroot . '/lib/antivirus',
             'availability'  => $CFG->dirroot . '/availability/condition',
             'qtype'         => $CFG->dirroot.'/question/type',
             'mod'           => $CFG->dirroot.'/mod',
@@ -431,7 +428,6 @@ $cache = '.var_export($cache, true).';
             'filter'        => $CFG->dirroot.'/filter',
             'editor'        => $CFG->dirroot.'/lib/editor',
             'format'        => $CFG->dirroot.'/course/format',
-            'dataformat'    => $CFG->dirroot.'/dataformat',
             'profilefield'  => $CFG->dirroot.'/user/profile/field',
             'report'        => $CFG->dirroot.'/report',
             'coursereport'  => $CFG->dirroot.'/course/report', // Must be after system reports.
@@ -443,7 +439,6 @@ $cache = '.var_export($cache, true).';
             'webservice'    => $CFG->dirroot.'/webservice',
             'repository'    => $CFG->dirroot.'/repository',
             'portfolio'     => $CFG->dirroot.'/portfolio',
-            'search'        => $CFG->dirroot.'/search/engine',
             'qbehaviour'    => $CFG->dirroot.'/question/behaviour',
             'qformat'       => $CFG->dirroot.'/question/format',
             'plagiarism'    => $CFG->dirroot.'/plagiarism',
@@ -903,45 +898,6 @@ $cache = '.var_export($cache, true).';
     }
 
     /**
-     * Returns all classes in a component matching the provided namespace.
-     *
-     * It checks that the class exists.
-     *
-     * e.g. get_component_classes_in_namespace('mod_forum', 'event')
-     *
-     * @param string $component A valid moodle component (frankenstyle)
-     * @param string $namespace Namespace from the component name or empty if all $component namespace classes.
-     * @return array The full class name as key and the class path as value.
-     */
-    public static function get_component_classes_in_namespace($component, $namespace = '') {
-
-        $component = self::normalize_componentname($component);
-
-        if ($namespace) {
-
-            // We will add them later.
-            $namespace = trim($namespace, '\\');
-
-            // We need add double backslashes as it is how classes are stored into self::$classmap.
-            $namespace = implode('\\\\', explode('\\', $namespace));
-            $namespace = $namespace . '\\\\';
-        }
-
-        $regex = '|^' . $component . '\\\\' . $namespace . '|';
-        $it = new RegexIterator(new ArrayIterator(self::$classmap), $regex, RegexIterator::GET_MATCH, RegexIterator::USE_KEY);
-
-        // We want to be sure that they exist.
-        $classes = array();
-        foreach ($it as $classname => $classpath) {
-            if (class_exists($classname)) {
-                $classes[$classname] = $classpath;
-            }
-        }
-
-        return $classes;
-    }
-
-    /**
      * Returns the exact absolute path to plugin directory.
      *
      * @param string $plugintype type of plugin
@@ -1025,7 +981,7 @@ $cache = '.var_export($cache, true).';
      * Note: this does not verify the validity of plugin or type names.
      *
      * @param string $component
-     * @return array two-items list of [(string)type, (string|null)name]
+     * @return array as (string)$type => (string)$plugin
      */
     public static function normalize_component($component) {
         if ($component === 'moodle' or $component === 'core' or $component === '') {

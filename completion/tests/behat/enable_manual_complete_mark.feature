@@ -17,6 +17,9 @@ Feature: Allow students to manually mark an activity as complete
       | user | course | role |
       | teacher1 | C1 | editingteacher |
       | student1 | C1 | student |
+    And the following config values are set as admin:
+      | enablecompletion | 1 |
+      | enableavailability | 1 |
     And I log in as "teacher1"
     And I am on site homepage
     And I follow "Course 1"
@@ -25,16 +28,15 @@ Feature: Allow students to manually mark an activity as complete
     And I set the following fields to these values:
       | Enable completion tracking | Yes |
     And I press "Save and display"
-    And I add a "Forum" to section "1" and I fill the form with:
+    When I add a "Forum" to section "1" and I fill the form with:
       | Forum name | Test forum name |
       | Description | Test forum description |
-    And "Student First" user has not completed "Test forum name" activity
+    Then "Student First" user has not completed "Test forum name" activity
     And I log out
     And I log in as "student1"
     And I am on site homepage
     And I follow "Course 1"
-    When I press "Mark as complete: Test forum name"
-    Then the "Test forum name" "forum" activity with "manual" completion should be marked as complete
+    And I press "Mark as complete: Test forum name"
     And I log out
     And I log in as "teacher1"
     And I am on site homepage

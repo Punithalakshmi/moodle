@@ -45,6 +45,7 @@ Feature: We can set the grade to pass value
     Then I should see "The grade to pass can not be greater than the maximum possible grade 50"
     And I press "Cancel"
 
+  @javascript
   Scenario: Set a valid grade to pass for an assignment activity using points
     When I turn editing mode on
     And I add a "Assignment" to section "1" and I fill the form with:
@@ -68,6 +69,7 @@ Feature: We can set the grade to pass value
     And I click on "Edit  assign Test Assignment 1" "link"
     And the field "Grade to pass" matches value "30"
 
+  @javascript
   Scenario: Set a valid grade to pass for an assignment activity using scales
     When I turn editing mode on
     And I add a "Assignment" to section "1" and I fill the form with:
@@ -79,7 +81,7 @@ Feature: We can set the grade to pass value
     And I navigate to "Grades" node in "Course administration"
     And I turn editing mode on
     And I click on "Edit  assign Test Assignment 1" "link"
-    And I expand all fieldsets
+    And I follow "Show more..."
     Then the field "Grade to pass" matches value "3"
     And I set the field "Grade to pass" to "4"
     And I press "Save changes"
@@ -88,6 +90,7 @@ Feature: We can set the grade to pass value
     And I follow "Edit settings"
     And the field "Grade to pass" matches value "4"
 
+  @javascript
   Scenario: Set a invalid grade to pass for an assignment activity using scales
     When I turn editing mode on
     And I add a "Assignment" to section "1" and I fill the form with:
@@ -98,6 +101,7 @@ Feature: We can set the grade to pass value
       | Grade to pass | 10 |
     Then I should see "The grade to pass can not be greater than the maximum possible grade 4"
 
+  @javascript
   Scenario: Set a valid grade to pass for workshop activity
     When I turn editing mode on
     And I add a "Workshop" to section "1" and I fill the form with:
@@ -110,12 +114,12 @@ Feature: We can set the grade to pass value
     And I navigate to "Grades" node in "Course administration"
     And I turn editing mode on
     And I click on "Edit  workshop Test Workshop 1 (submission)" "link"
-    And I expand all fieldsets
+    And I follow "Show more..."
     Then the field "Grade to pass" matches value "40"
     And I set the field "Grade to pass" to "45"
     And I press "Save changes"
     And I click on "Edit  workshop Test Workshop 1 (assessment)" "link"
-    And I expand all fieldsets
+    And I follow "Show more..."
     And the field "Grade to pass" matches value "10"
     And I set the field "Grade to pass" to "15"
     And I press "Save changes"
@@ -125,6 +129,7 @@ Feature: We can set the grade to pass value
     And the field "Submission grade to pass" matches value "45"
     And the field "Assessment grade to pass" matches value "15"
 
+  @javascript
   Scenario: Set an invalid grade to pass for workshop activity
     When I turn editing mode on
     And I add a "Workshop" to section "1" and I fill the form with:
@@ -137,6 +142,7 @@ Feature: We can set the grade to pass value
     Then "The grade to pass can not be greater than the maximum possible grade 80" "text" should exist in the "#fitem_id_submissiongradepass .error" "css_element"
     Then "The grade to pass can not be greater than the maximum possible grade 20" "text" should exist in the "#fitem_id_gradinggradepass .error" "css_element"
 
+  @javascript
   Scenario: Set a valid grade to pass for quiz activity
     When I turn editing mode on
     And I add a "Quiz" to section "1" and I fill the form with:
@@ -145,7 +151,7 @@ Feature: We can set the grade to pass value
     And I navigate to "Grades" node in "Course administration"
     And I turn editing mode on
     And I click on "Edit  quiz Test Quiz 1" "link"
-    And I expand all fieldsets
+    And I follow "Show more..."
     Then the field "Grade to pass" matches value "9.5"
     And I set the field "Grade to pass" to "8"
     And I press "Save changes"
@@ -154,6 +160,7 @@ Feature: We can set the grade to pass value
     And I follow "Edit settings"
     And the field "Grade to pass" matches value "8.00"
 
+  @javascript
   Scenario: Set a valid grade to pass for lesson activity
     When I turn editing mode on
     And I add a "Lesson" to section "1" and I fill the form with:
@@ -163,7 +170,7 @@ Feature: We can set the grade to pass value
     And I navigate to "Grades" node in "Course administration"
     And I turn editing mode on
     And I click on "Edit  lesson Test Lesson 1" "link"
-    And I expand all fieldsets
+    And I follow "Show more..."
     Then the field "Grade to pass" matches value "90"
     And I set the field "Grade to pass" to "80"
     And I press "Save changes"
@@ -172,6 +179,7 @@ Feature: We can set the grade to pass value
     And I follow "Edit settings"
     And the field "Grade to pass" matches value "80"
 
+  @javascript
   Scenario: Set a valid grade to pass for database activity
     When I turn editing mode on
     And I add a "Database" to section "1" and I fill the form with:
@@ -182,7 +190,7 @@ Feature: We can set the grade to pass value
     And I navigate to "Grades" node in "Course administration"
     And I turn editing mode on
     And I click on "Edit  data Test Database 1" "link"
-    And I expand all fieldsets
+    And I follow "Show more..."
     Then the field "Grade to pass" matches value "90"
     And I set the field "Grade to pass" to "80"
     And I press "Save changes"
@@ -191,6 +199,7 @@ Feature: We can set the grade to pass value
     And I follow "Edit settings"
     And the field "Grade to pass" matches value "80"
 
+  @javascript
   Scenario: Set an invalid grade to pass for forum activity
     When I turn editing mode on
     And I add a "Forum" to section "1" and I fill the form with:
@@ -201,6 +210,7 @@ Feature: We can set the grade to pass value
       | scale[modgrade_point] | 60 |
     Then I should see "The grade to pass can not be greater than the maximum possible grade 60"
 
+  @javascript
   Scenario: Set a valid grade to pass for forum activity
     When I turn editing mode on
     And I add a "Forum" to section "1" and I fill the form with:
@@ -211,7 +221,7 @@ Feature: We can set the grade to pass value
     And I navigate to "Grades" node in "Course administration"
     And I turn editing mode on
     And I click on "Edit  forum Test Forum 1" "link"
-    And I expand all fieldsets
+    And I follow "Show more..."
     Then the field "Grade to pass" matches value "90"
     And I set the field "Grade to pass" to "80"
     And I press "Save changes"
@@ -220,6 +230,7 @@ Feature: We can set the grade to pass value
     And I follow "Edit settings"
     And the field "Grade to pass" matches value "80"
 
+  @javascript
   Scenario: Set a valid grade to pass for glossary activity
     When I turn editing mode on
     And I add a "Glossary" to section "1" and I fill the form with:
@@ -230,7 +241,7 @@ Feature: We can set the grade to pass value
     And I navigate to "Grades" node in "Course administration"
     And I turn editing mode on
     And I click on "Edit  glossary Test Glossary 1" "link"
-    And I expand all fieldsets
+    And I follow "Show more..."
     Then the field "Grade to pass" matches value "90"
     And I set the field "Grade to pass" to "80"
     And I press "Save changes"

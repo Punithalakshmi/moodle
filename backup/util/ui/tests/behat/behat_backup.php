@@ -167,7 +167,7 @@ class behat_backup extends behat_base {
             $this->getSession());
 
         // The argument should be converted to an xpath literal.
-        $fromcourse = behat_context_helper::escape($fromcourse);
+        $fromcourse = $this->getSession()->getSelectorsHandler()->xpathLiteral($fromcourse);
         $xpath = "//div[contains(concat(' ', normalize-space(@class), ' '), ' ics-results ')]" .
             "/descendant::tr[contains(., $fromcourse)]" .
             "/descendant::input[@type='radio']";
@@ -212,13 +212,14 @@ class behat_backup extends behat_base {
         $this->select_backup($backupfilename);
 
         // The argument should be converted to an xpath literal.
-        $existingcourse = behat_context_helper::escape($existingcourse);
+        $existingcourse = $this->getSession()->getSelectorsHandler()->xpathLiteral($existingcourse);
 
         // Selecting the specified course (we can not call behat_forms::select_radio here as is in another behat subcontext).
         $radionode = $this->find('xpath', "//div[contains(concat(' ', normalize-space(@class), ' '), ' bcs-existing-course ')]" .
             "/descendant::div[@class='restore-course-search']" .
             "/descendant::tr[contains(., $existingcourse)]" .
             "/descendant::input[@type='radio']");
+        $radionode->check();
         $radionode->click();
 
         // Pressing the continue button of the restore into an existing course section.
@@ -249,6 +250,7 @@ class behat_backup extends behat_base {
         $radionode = $this->find('xpath', "//div[contains(concat(' ', normalize-space(@class), ' '), ' bcs-new-course ')]" .
             "/descendant::div[@class='restore-course-search']" .
             "/descendant::input[@type='radio']");
+        $radionode->check();
         $radionode->click();
 
         // Pressing the continue button of the restore into an existing course section.
@@ -278,6 +280,7 @@ class behat_backup extends behat_base {
         // Merge without deleting radio option.
         $radionode = $this->find('xpath', "//div[contains(concat(' ', normalize-space(@class), ' '), 'bcs-current-course')]" .
             "/descendant::input[@type='radio'][@name='target'][@value='1']");
+        $radionode->check();
         $radionode->click();
 
         // Pressing the continue button of the restore merging section.
@@ -307,6 +310,7 @@ class behat_backup extends behat_base {
         // Delete contents radio option.
         $radionode = $this->find('xpath', "//div[contains(concat(' ', normalize-space(@class), ' '), 'bcs-current-course')]" .
             "/descendant::input[@type='radio'][@name='target'][@value='0']");
+        $radionode->check();
         $radionode->click();
 
         // Pressing the continue button of the restore merging section.
@@ -333,7 +337,7 @@ class behat_backup extends behat_base {
             $this->getSession());
 
         // The argument should be converted to an xpath literal.
-        $backupfilename = behat_context_helper::escape($backupfilename);
+        $backupfilename = $this->getSession()->getSelectorsHandler()->xpathLiteral($backupfilename);
 
         $xpath = "//tr[contains(., $backupfilename)]/descendant::a[contains(., '" . get_string('restore') . "')]";
         $restorelink = $this->find('xpath', $xpath, $exception);
@@ -415,6 +419,8 @@ class behat_backup extends behat_base {
             return;
         }
 
+        $pageoptions = clone $options;
+
         $rows = $options->getRows();
         $newrows = array();
         foreach ($rows as $k => $data) {
@@ -427,8 +433,7 @@ class behat_backup extends behat_base {
                 $newrows[] = $data;
             }
         }
-        $pageoptions = new TableNode($newrows);
-
+        $pageoptions->setRows($newrows);
         return $pageoptions;
     }
 

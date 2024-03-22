@@ -40,10 +40,13 @@ if ($action == 'delchoice' and confirm_sesskey() and is_enrolled($context, NULL,
         and $choiceavailable) {
     $answercount = $DB->count_records('choice_answers', array('choiceid' => $choice->id, 'userid' => $USER->id));
     if ($answercount > 0) {
-        $choiceanswers = $DB->get_records('choice_answers', array('choiceid' => $choice->id, 'userid' => $USER->id),
-            '', 'id');
-        $todelete = array_keys($choiceanswers);
-        choice_delete_responses($todelete, $choice, $cm, $course);
+        $DB->delete_records('choice_answers', array('choiceid' => $choice->id, 'userid' => $USER->id));
+
+        // Update completion state
+        $completion = new completion_info($course);
+        if ($completion->is_enabled($cm) && $choice->completionsubmit) {
+            $completion->update_state($cm, COMPLETION_INCOMPLETE);
+        }
         redirect("view.php?id=$cm->id");
     }
 }

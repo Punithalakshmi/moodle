@@ -35,6 +35,13 @@ global $CFG;
  */
 class tool_uploadcourse_course_testcase extends advanced_testcase {
 
+    /**
+     * Tidy up open files that may be left open.
+     */
+    protected function tearDown() {
+        gc_collect_cycles();
+    }
+
     public function test_proceed_without_prepare() {
         $this->resetAfterTest(true);
         $mode = tool_uploadcourse_processor::MODE_CREATE_NEW;
@@ -254,7 +261,6 @@ class tool_uploadcourse_course_testcase extends advanced_testcase {
             'groupmode' => '2',
             'groupmodeforce' => '1',
             'enablecompletion' => '1',
-            'tags' => 'Cat, Dog',
 
             'role_teacher' => 'Knight',
             'role_manager' => 'Jedi',
@@ -291,7 +297,6 @@ class tool_uploadcourse_course_testcase extends advanced_testcase {
         $this->assertEquals($data['groupmode'], $course->groupmode);
         $this->assertEquals($data['groupmodeforce'], $course->groupmodeforce);
         $this->assertEquals($data['enablecompletion'], $course->enablecompletion);
-        $this->assertEquals($data['tags'], join(', ', core_tag_tag::get_item_tags_array('core', 'course', $course->id)));
 
         // Roles.
         $roleids = array();
@@ -420,7 +425,7 @@ class tool_uploadcourse_course_testcase extends advanced_testcase {
             'fullname' => 'Fullname',
             'category' => '1',
             'visible' => '0',
-            'startdate' => 644803200,
+            'startdate' => '8 June 1990',
             'idnumber' => '123abc',
             'summary' => 'Summary',
             'format' => 'weeks',
@@ -447,7 +452,7 @@ class tool_uploadcourse_course_testcase extends advanced_testcase {
         $this->assertEquals($defaultdata['fullname'], $course->fullname);
         $this->assertEquals($defaultdata['category'], $course->category);
         $this->assertEquals($defaultdata['visible'], $course->visible);
-        $this->assertEquals($defaultdata['startdate'], $course->startdate);
+        $this->assertEquals(mktime(0, 0, 0, 6, 8, 1990), $course->startdate);
         $this->assertEquals($defaultdata['idnumber'], $course->idnumber);
         $this->assertEquals($defaultdata['summary'], $course->summary);
         $this->assertEquals($defaultdata['format'], $course->format);
@@ -473,7 +478,7 @@ class tool_uploadcourse_course_testcase extends advanced_testcase {
             'fullname' => 'Fullname 2',
             'category' => $cat->id,
             'visible' => '1',
-            'startdate' => 455760000,
+            'startdate' => '11 June 1984',
             'idnumber' => 'changedid',
             'summary' => 'Summary 2',
             'format' => 'topics',
@@ -500,7 +505,7 @@ class tool_uploadcourse_course_testcase extends advanced_testcase {
         $this->assertEquals($defaultdata['fullname'], $course->fullname);
         $this->assertEquals($defaultdata['category'], $course->category);
         $this->assertEquals($defaultdata['visible'], $course->visible);
-        $this->assertEquals($defaultdata['startdate'], $course->startdate);
+        $this->assertEquals(mktime(0, 0, 0, 6, 11, 1984), $course->startdate);
         $this->assertEquals($defaultdata['idnumber'], $course->idnumber);
         $this->assertEquals($defaultdata['summary'], $course->summary);
         $this->assertEquals($defaultdata['format'], $course->format);

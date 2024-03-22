@@ -49,13 +49,12 @@
         $frm->password = generate_password(8);
 
     /// Check if the user has actually submitted login data to us
-        $reason = null;
 
         if ($shibbolethauth->user_login($frm->username, $frm->password)
-                && $user = authenticate_user_login($frm->username, $frm->password, false, $reason, false)) {
+                && $user = authenticate_user_login($frm->username, $frm->password)) {
             complete_user_login($user);
 
-            if (user_not_fully_set_up($USER, true)) {
+            if (user_not_fully_set_up($USER)) {
                 $urltogo = $CFG->wwwroot.'/user/edit.php?id='.$USER->id.'&amp;course='.SITEID;
                 // We don't delete $SESSION->wantsurl yet, so we get there later
 

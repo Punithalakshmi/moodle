@@ -387,15 +387,15 @@
          if ($notes != '' and confirm_sesskey()) {
              if (survey_get_analysis($survey->id, $user->id)) {
                  if (! survey_update_analysis($survey->id, $user->id, $notes)) {
-                     echo $OUTPUT->notification(get_string("errorunabletosavenotes", "survey"), "notifyproblem");
+                     echo $OUTPUT->notification("An error occurred while saving your notes.  Sorry.");
                  } else {
-                     echo $OUTPUT->notification(get_string("savednotes", "survey"), "notifysuccess");
+                     echo $OUTPUT->notification(get_string("savednotes", "survey"));
                  }
              } else {
                  if (! survey_add_analysis($survey->id, $user->id, $notes)) {
-                     echo $OUTPUT->notification(get_string("errorunabletosavenotes", "survey"), "notifyproblem");
+                     echo $OUTPUT->notification("An error occurred while saving your notes.  Sorry.");
                  } else {
-                     echo $OUTPUT->notification(get_string("savednotes", "survey"), "notifysuccess");
+                     echo $OUTPUT->notification(get_string("savednotes", "survey"));
                  }
              }
          }

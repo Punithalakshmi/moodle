@@ -894,16 +894,15 @@ class completion_info {
         $usecache = $userid == $USER->id;
         $cacheddata = array();
         if ($usecache) {
-            $key = $userid . '_' . $this->course->id;
             if (!isset($this->course->cacherev)) {
                 $this->course = get_course($this->course_id);
             }
-            if ($cacheddata = $completioncache->get($key)) {
+            if ($cacheddata = $completioncache->get($userid . '_' . $this->course->id)) {
                 if ($cacheddata['cacherev'] != $this->course->cacherev) {
                     // Course structure has been changed since the last caching, forget the cache.
                     $cacheddata = array();
-                } else if (isset($cacheddata[$cm->id])) {
-                    return (object)$cacheddata[$cm->id];
+                } else if (array_key_exists($cm->id, $cacheddata)) {
+                    return $cacheddata[$cm->id];
                 }
             }
         }
@@ -922,8 +921,10 @@ class completion_info {
 
             // Reindex by cm id
             $alldata = array();
-            foreach ($alldatabycmc as $data) {
-                $alldata[$data->coursemoduleid] = (array)$data;
+            if ($alldatabycmc) {
+                foreach ($alldatabycmc as $data) {
+                    $alldata[$data->coursemoduleid] = $data;
+                }
             }
 
             // Get the module info and build up condition info for each one
@@ -931,17 +932,17 @@ class completion_info {
                 $modinfo = get_fast_modinfo($this->course, $userid);
             }
             foreach ($modinfo->cms as $othercm) {
-                if (isset($alldata[$othercm->id])) {
+                if (array_key_exists($othercm->id, $alldata)) {
                     $data = $alldata[$othercm->id];
                 } else {
                     // Row not present counts as 'not complete'
-                    $data = array();
-                    $data['id'] = 0;
-                    $data['coursemoduleid'] = $othercm->id;
-                    $data['userid'] = $userid;
-                    $data['completionstate'] = 0;
-                    $data['viewed'] = 0;
-                    $data['timemodified'] = 0;
+                    $data = new StdClass;
+                    $data->id              = 0;
+                    $data->coursemoduleid  = $othercm->id;
+                    $data->userid          = $userid;
+                    $data->completionstate = 0;
+                    $data->viewed          = 0;
+                    $data->timemodified    = 0;
                 }
                 $cacheddata[$othercm->id] = $data;
             }
@@ -953,17 +954,15 @@ class completion_info {
         } else {
             // Get single record
             $data = $DB->get_record('course_modules_completion', array('coursemoduleid'=>$cm->id, 'userid'=>$userid));
-            if ($data) {
-                $data = (array)$data;
-            } else {
+            if ($data == false) {
                 // Row not present counts as 'not complete'
-                $data = array();
-                $data['id'] = 0;
-                $data['coursemoduleid'] = $cm->id;
-                $data['userid'] = $userid;
-                $data['completionstate'] = 0;
-                $data['viewed'] = 0;
-                $data['timemodified'] = 0;
+                $data = new StdClass;
+                $data->id              = 0;
+                $data->coursemoduleid  = $cm->id;
+                $data->userid          = $userid;
+                $data->completionstate = 0;
+                $data->viewed          = 0;
+                $data->timemodified    = 0;
             }
 
             // Put in cache
@@ -972,9 +971,9 @@ class completion_info {
 
         if ($usecache) {
             $cacheddata['cacherev'] = $this->course->cacherev;
-            $completioncache->set($key, $cacheddata);
+            $completioncache->set($userid . '_' . $this->course->id, $cacheddata);
         }
-        return (object)$cacheddata[$cm->id];
+        return $cacheddata[$cm->id];
     }
 
     /**

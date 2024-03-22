@@ -58,11 +58,8 @@ class search_token {
 
   /**
    * Old syntax of class constructor. Deprecated in PHP7.
-   *
-   * @deprecated since Moodle 3.1
    */
   public function search_token($type, $value) {
-    debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
     self::__construct($type, $value);
   }
 
@@ -206,11 +203,8 @@ class search_lexer extends Lexer{
 
   /**
    * Old syntax of class constructor. Deprecated in PHP7.
-   *
-   * @deprecated since Moodle 3.1
    */
   public function search_lexer(&$parser) {
-    debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
     self::__construct($parser);
   }
 

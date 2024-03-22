@@ -63,14 +63,7 @@ define('MEMORY_HUGE', -4);
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @deprecated since 2.0
  */
-class object extends stdClass {
-    /**
-     * Constructor.
-     */
-    public function __construct() {
-        debugging("'object' class has been deprecated, please use stdClass instead.", DEBUG_DEVELOPER);
-    }
-};
+class object extends stdClass {};
 
 /**
  * Base Moodle Exception class
@@ -384,8 +377,7 @@ function default_exception_handler($ex) {
                 // If you enable db debugging and exception is thrown, the print footer prints a lot of rubbish
                 $DB->set_debug(0);
             }
-            echo $OUTPUT->fatal_error($info->message, $info->moreinfourl, $info->link, $info->backtrace, $info->debuginfo,
-                $info->errorcode);
+            echo $OUTPUT->fatal_error($info->message, $info->moreinfourl, $info->link, $info->backtrace, $info->debuginfo);
         } catch (Exception $e) {
             $out_ex = $e;
         } catch (Throwable $e) {
@@ -729,9 +721,6 @@ function get_docs_url($path = null) {
 
 /**
  * Formats a backtrace ready for output.
- *
- * This function does not include function arguments because they could contain sensitive information
- * not suitable to be exposed in a response.
  *
  * @param array $callers backtrace array, as returned by debug_backtrace().
  * @param boolean $plaintext if false, generates HTML, if true generates plain text.
@@ -1331,23 +1320,26 @@ function get_real_size($size = 0) {
     if (!$size) {
         return 0;
     }
+    $scan = array();
+    $scan['GB'] = 1073741824;
+    $scan['Gb'] = 1073741824;
+    $scan['G'] = 1073741824;
+    $scan['MB'] = 1048576;
+    $scan['Mb'] = 1048576;
+    $scan['M'] = 1048576;
+    $scan['m'] = 1048576;
+    $scan['KB'] = 1024;
+    $scan['Kb'] = 1024;
+    $scan['K'] = 1024;
+    $scan['k'] = 1024;
 
-    static $binaryprefixes = array(
-        'K' => 1024,
-        'k' => 1024,
-        'M' => 1048576,
-        'm' => 1048576,
-        'G' => 1073741824,
-        'g' => 1073741824,
-        'T' => 1099511627776,
-        't' => 1099511627776,
-    );
-
-    if (preg_match('/^([0-9]+)([KMGT])/i', $size, $matches)) {
-        return $matches[1] * $binaryprefixes[$matches[2]];
+    while (list($key) = each($scan)) {
+        if ((strlen($size)>strlen($key))&&(substr($size, strlen($size) - strlen($key))==$key)) {
+            $size = substr($size, 0, strlen($size) - strlen($key)) * $scan[$key];
+            break;
+        }
     }
-
-    return (int) $size;
+    return $size;
 }
 
 /**
@@ -1381,10 +1373,6 @@ function disable_output_buffering() {
     ini_set('output_handler', '');
 
     error_reporting($olddebug);
-
-    // Disable buffering in nginx.
-    header('X-Accel-Buffering: no');
-
 }
 
 /**

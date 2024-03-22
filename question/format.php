@@ -425,8 +425,9 @@ class qformat_default {
 
             $result = question_bank::get_qtype($question->qtype)->save_question_options($question);
 
-            if (isset($question->tags)) {
-                core_tag_tag::set_item_tags('core_question', 'question', $question->id, $question->context, $question->tags);
+            if (!empty($CFG->usetags) && isset($question->tags)) {
+                require_once($CFG->dirroot . '/tag/lib.php');
+                tag_set('question', $question->id, $question->tags, 'core_question', $question->context->id);
             }
 
             if (!empty($result->error)) {
@@ -938,8 +939,8 @@ class qformat_default {
      * during import to let the user see roughly what is going on.
      */
     protected function format_question_text($question) {
-        return s(question_utils::to_plain_text($question->questiontext,
-                $question->questiontextformat));
+        return question_utils::to_plain_text($question->questiontext,
+                $question->questiontextformat);
     }
 }
 

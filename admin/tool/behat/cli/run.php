@@ -26,6 +26,7 @@ if (isset($_SERVER['REMOTE_ADDR'])) {
     die(); // No access from web!
 }
 
+define('BEHAT_UTIL', true);
 define('CLI_SCRIPT', true);
 define('ABORT_AFTER_CONFIG', true);
 define('CACHE_DISABLE_ALL', true);
@@ -100,9 +101,6 @@ if (empty($options['torun'])) {
 if (extension_loaded('pcntl')) {
     $disabled = explode(',', ini_get('disable_functions'));
     if (!in_array('pcntl_signal', $disabled)) {
-        // Handle interrupts on PHP7.
-        declare(ticks = 1);
-
         pcntl_signal(SIGTERM, "signal_handler");
         pcntl_signal(SIGINT, "signal_handler");
     }
@@ -122,14 +120,10 @@ $tags = '';
 
 if ($options['profile']) {
     $profile = $options['profile'];
-
-    // If profile passed is not set, then exit.
-    if (!isset($CFG->behat_config[$profile]) && !isset($CFG->behat_profiles[$profile]) &&
-        !(isset($options['replace']) && (strpos($options['profile'], $options['replace']) >= 0 ))) {
-        echo "Invalid profile passed: " . $profile . PHP_EOL;
+    if (!isset($CFG->behat_config[$profile])) {
+        echo "Invalid profile passed: " . $profile;
         exit(1);
     }
-
     $extraopts[] = '--profile="' . $profile . '"';
     // By default, profile tags will be used.
     if (!empty($CFG->behat_config[$profile]['filters']['tags'])) {
@@ -232,27 +226,22 @@ $exitcodes = print_combined_run_output($processes, $stoponfail);
 $time = round(microtime(true) - $time, 1);
 echo "Finished in " . gmdate("G\h i\m s\s", $time) . PHP_EOL . PHP_EOL;
 
-ksort($exitcodes);
 
 // Print exit info from each run.
-// Status bits contains pass/fail status of parallel runs.
-$status = 0;
-$processcounter = 0;
+$status = false;
 foreach ($exitcodes as $exitcode) {
-    if ($exitcode) {
-        $status |= (1 << $processcounter);
-    }
-    $processcounter++;
+    $status = (bool)$status || (bool)$exitcode;
 }
 
 // Run finished. Show exit code and output from individual process.
 $verbose = empty($options['verbose']) ? false : true;
-$verbose = $verbose || !empty($status);
+$verbose = $verbose || $status;
 
 // Show exit code from each process, if any process failed.
 if ($verbose) {
     // Echo exit codes.
     echo "Exit codes for each behat run: " . PHP_EOL;
+    ksort($exitcodes);
     foreach ($exitcodes as $run => $exitcode) {
         echo $run . ": " . $exitcode . PHP_EOL;
     }
@@ -274,7 +263,7 @@ print_each_process_info($processes, $verbose);
 // Remove site symlink if necessary.
 behat_config_manager::drop_parallel_site_links();
 
-exit($status);
+exit((int) $status);
 
 /**
  * Signal handler for terminal exit.

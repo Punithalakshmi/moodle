@@ -72,8 +72,7 @@ class repository_webdav extends repository {
     }
     public function get_file($url, $title = '') {
         $url = urldecode($url);
-        // Prepare a file with an arbitrary name - cannot be $title because of special chars (cf. MDL-57002).
-        $path = $this->prepare_file(uniqid());
+        $path = $this->prepare_file($title);
         if (!$this->dav->open()) {
             return false;
         }

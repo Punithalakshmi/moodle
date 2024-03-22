@@ -1170,26 +1170,6 @@ class core_moodlelib_testcase extends advanced_testcase {
         }
     }
 
-    public function test_set_user_preference_for_current_user() {
-        global $USER;
-        $this->resetAfterTest();
-        $this->setAdminUser();
-
-        set_user_preference('test_pref', 2);
-        set_user_preference('test_pref', 1, $USER->id);
-        $this->assertEquals(1, get_user_preferences('test_pref'));
-    }
-
-    public function test_unset_user_preference_for_current_user() {
-        global $USER;
-        $this->resetAfterTest();
-        $this->setAdminUser();
-
-        set_user_preference('test_pref', 1);
-        unset_user_preference('test_pref', $USER->id);
-        $this->assertNull(get_user_preferences('test_pref'));
-    }
-
     public function test_get_extra_user_fields() {
         global $CFG, $USER, $DB;
         $this->resetAfterTest();
@@ -1602,7 +1582,7 @@ class core_moodlelib_testcase extends advanced_testcase {
                 'expectedoutput' => '1309485600'
             ),
             array(
-                'usertimezone' => '-14', // Server time.
+                'usertimezone' => '14', // Server time.
                 'year' => '2011',
                 'month' => '7',
                 'day' => '1',
@@ -2664,123 +2644,6 @@ class core_moodlelib_testcase extends advanced_testcase {
         $this->assertEventContextNotUsed($event);
     }
 
-    /**
-     * A data provider for testing email messageid
-     */
-    public function generate_email_messageid_provider() {
-        return array(
-            'nopath' => array(
-                'wwwroot' => 'http://www.example.com',
-                'ids' => array(
-                    'a-custom-id' => '<a-custom-id@www.example.com>',
-                    'an-id-with-/-a-slash' => '<an-id-with-%2F-a-slash@www.example.com>',
-                ),
-            ),
-            'path' => array(
-                'wwwroot' => 'http://www.example.com/path/subdir',
-                'ids' => array(
-                    'a-custom-id' => '<a-custom-id/path/subdir@www.example.com>',
-                    'an-id-with-/-a-slash' => '<an-id-with-%2F-a-slash/path/subdir@www.example.com>',
-                ),
-            ),
-        );
-    }
-
-    /**
-     * Test email message id generation
-     *
-     * @dataProvider generate_email_messageid_provider
-     *
-     * @param string $wwwroot The wwwroot
-     * @param array $msgids An array of msgid local parts and the final result
-     */
-    public function test_generate_email_messageid($wwwroot, $msgids) {
-        global $CFG;
-
-        $this->resetAfterTest();
-        $CFG->wwwroot = $wwwroot;
-
-        foreach ($msgids as $local => $final) {
-            $this->assertEquals($final, generate_email_messageid($local));
-        }
-    }
-
-    /**
-     * A data provider for testing email diversion
-     */
-    public function diverted_emails_provider() {
-        return array(
-            'nodiverts' => array(
-                'divertallemailsto' => null,
-                'divertallemailsexcept' => null,
-                array(
-                    'foo@example.com',
-                    'test@real.com',
-                    'fred.jones@example.com',
-                    'dev1@dev.com',
-                    'fred@example.com',
-                    'fred+verp@example.com',
-                ),
-                false,
-            ),
-            'alldiverts' => array(
-                'divertallemailsto' => 'somewhere@elsewhere.com',
-                'divertallemailsexcept' => null,
-                array(
-                    'foo@example.com',
-                    'test@real.com',
-                    'fred.jones@example.com',
-                    'dev1@dev.com',
-                    'fred@example.com',
-                    'fred+verp@example.com',
-                ),
-                true,
-            ),
-            'alsodiverts' => array(
-                'divertallemailsto' => 'somewhere@elsewhere.com',
-                'divertallemailsexcept' => '@dev.com, fred(\+.*)?@example.com',
-                array(
-                    'foo@example.com',
-                    'test@real.com',
-                    'fred.jones@example.com',
-                ),
-                true,
-            ),
-            'divertsexceptions' => array(
-                'divertallemailsto' => 'somewhere@elsewhere.com',
-                'divertallemailsexcept' => '@dev.com, fred(\+.*)?@example.com',
-                array(
-                    'dev1@dev.com',
-                    'fred@example.com',
-                    'fred+verp@example.com',
-                ),
-                false,
-            ),
-        );
-    }
-
-    /**
-     * Test email diversion
-     *
-     * @dataProvider diverted_emails_provider
-     *
-     * @param string $divertallemailsto An optional email address
-     * @param string $divertallemailsexcept An optional exclusion list
-     * @param array $addresses An array of test addresses
-     * @param boolean $expected Expected result
-     */
-    public function test_email_should_be_diverted($divertallemailsto, $divertallemailsexcept, $addresses, $expected) {
-        global $CFG;
-
-        $this->resetAfterTest();
-        $CFG->divertallemailsto = $divertallemailsto;
-        $CFG->divertallemailsexcept = $divertallemailsexcept;
-
-        foreach ($addresses as $address) {
-            $this->assertEquals($expected, email_should_be_diverted($address));
-        }
-    }
-
     public function test_email_to_user() {
         global $CFG;
 
@@ -3067,9 +2930,6 @@ class core_moodlelib_testcase extends advanced_testcase {
         $result = random_bytes_emulate(666);
         $this->assertSame(666, strlen($result));
 
-        $result = random_bytes_emulate(40);
-        $this->assertSame(40, strlen($result));
-
         $this->assertDebuggingNotCalled();
 
         $result = random_bytes_emulate(0);
@@ -3149,58 +3009,5 @@ class core_moodlelib_testcase extends advanced_testcase {
         $result = complex_random_string(-1);
         $this->assertSame('', $result);
         $this->assertDebuggingCalled();
-    }
-
-    /**
-     * Test that generate_email_processing_address() returns valid email address.
-     */
-    public function test_generate_email_processing_address() {
-        global $CFG;
-        $this->resetAfterTest();
-
-        $data = (object)[
-            'id' => 42,
-            'email' => 'my.email+from_moodle@example.com',
-        ];
-
-        $modargs = 'B'.base64_encode(pack('V', $data->id)).substr(md5($data->email), 0, 16);
-
-        $CFG->maildomain = 'example.com';
-        $CFG->mailprefix = 'mdl+';
-        $this->assertEquals(1, validate_email(generate_email_processing_address(0, $modargs)));
-
-        $CFG->maildomain = 'mail.example.com';
-        $CFG->mailprefix = 'mdl-';
-        $this->assertEquals(1, validate_email(generate_email_processing_address(23, $modargs)));
-    }
-
-    /**
-     * Test safe method unserialize_array().
-     */
-    public function test_unserialize_array() {
-        $a = [1, 2, 3];
-        $this->assertEquals($a, unserialize_array(serialize($a)));
-        $this->assertEquals($a, unserialize_array(serialize($a)));
-        $a = ['a' => 1, 2 => 2, 'b' => 'cde'];
-        $this->assertEquals($a, unserialize_array(serialize($a)));
-        $this->assertEquals($a, unserialize_array(serialize($a)));
-        $a = ['a' => 1, 2 => 2, 'b' => 'c"d"e'];
-        $this->assertEquals($a, unserialize_array(serialize($a)));
-        $a = ['a' => 1, 2 => ['c' => 'd', 'e' => 'f'], 'b' => 'cde'];
-        $this->assertEquals($a, unserialize_array(serialize($a)));
-
-        // Can not unserialize if any string contains semicolons.
-        $a = ['a' => 1, 2 => 2, 'b' => 'c"d";e'];
-        $this->assertEquals(false, unserialize_array(serialize($a)));
-
-        // Can not unserialize if there are any objects.
-        $a = (object)['a' => 1, 2 => 2, 'b' => 'cde'];
-        $this->assertEquals(false, unserialize_array(serialize($a)));
-        $a = ['a' => 1, 2 => 2, 'b' => (object)['a' => 'cde']];
-        $this->assertEquals(false, unserialize_array(serialize($a)));
-
-        // Array used in the grader report.
-        $a = array('aggregatesonly' => [51, 34], 'gradesonly' => [21, 45, 78]);
-        $this->assertEquals($a, unserialize_array(serialize($a)));
     }
 }

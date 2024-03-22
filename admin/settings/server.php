@@ -12,28 +12,25 @@ $temp->add(new admin_setting_configexecutable('pathtodu', new lang_string('patht
 $temp->add(new admin_setting_configexecutable('aspellpath', new lang_string('aspellpath', 'admin'), new lang_string('edhelpaspellpath'), ''));
 $temp->add(new admin_setting_configexecutable('pathtodot', new lang_string('pathtodot', 'admin'), new lang_string('pathtodot_help', 'admin'), ''));
 $temp->add(new admin_setting_configexecutable('pathtogs', new lang_string('pathtogs', 'admin'), new lang_string('pathtogs_help', 'admin'), '/usr/bin/gs'));
-$temp->add(new admin_setting_configexecutable('pathtounoconv', new lang_string('pathtounoconv', 'admin'), new lang_string('pathtounoconv_help', 'admin'), '/usr/bin/unoconv'));
 $ADMIN->add('server', $temp);
 
 
 
 // "supportcontact" settingpage
 $temp = new admin_settingpage('supportcontact', new lang_string('supportcontact','admin'));
-$primaryadmin = get_admin();
-if ($primaryadmin) {
-    $primaryadminemail = $primaryadmin->email;
-    $primaryadminname  = fullname($primaryadmin, true);
+if (isloggedin()) {
+    global $USER;
+    $primaryadminemail = $USER->email;
+    $primaryadminname  = fullname($USER, true);
+
 } else {
     // no defaults during installation - admin user must be created first
     $primaryadminemail = NULL;
     $primaryadminname  = NULL;
 }
-$temp->add(new admin_setting_configtext('supportname', new lang_string('supportname', 'admin'),
-    new lang_string('configsupportname', 'admin'), $primaryadminname, PARAM_NOTAGS));
-$temp->add(new admin_setting_configtext('supportemail', new lang_string('supportemail', 'admin'),
-    new lang_string('configsupportemail', 'admin'), $primaryadminemail, PARAM_EMAIL));
-$temp->add(new admin_setting_configtext('supportpage', new lang_string('supportpage', 'admin'),
-    new lang_string('configsupportpage', 'admin'), '', PARAM_URL));
+$temp->add(new admin_setting_configtext('supportname', new lang_string('supportname', 'admin'), new lang_string('configsupportname', 'admin'), $primaryadminname, PARAM_NOTAGS));
+$temp->add(new admin_setting_configtext('supportemail', new lang_string('supportemail', 'admin'), new lang_string('configsupportemail', 'admin'), $primaryadminemail, PARAM_NOTAGS));
+$temp->add(new admin_setting_configtext('supportpage', new lang_string('supportpage', 'admin'), new lang_string('configsupportpage', 'admin'), '', PARAM_URL));
 $ADMIN->add('server', $temp);
 
 
@@ -82,6 +79,7 @@ $temp->add(new admin_setting_configselect('statsmaxruntime', new lang_string('st
                                                                                                                                                             60*60*7 => '7 '.new lang_string('hours'),
                                                                                                                                                             60*60*8 => '8 '.new lang_string('hours') )));
 $temp->add(new admin_setting_configtext('statsruntimedays', new lang_string('statsruntimedays', 'admin'), new lang_string('configstatsruntimedays', 'admin'), 31, PARAM_INT));
+$temp->add(new admin_setting_configtime('statsruntimestarthour', 'statsruntimestartminute', new lang_string('statsruntimestart', 'admin'), new lang_string('configstatsruntimestart', 'admin'), array('h' => 0, 'm' => 0)));
 $temp->add(new admin_setting_configtext('statsuserthreshold', new lang_string('statsuserthreshold', 'admin'), new lang_string('configstatsuserthreshold', 'admin'), 0, PARAM_INT));
 $ADMIN->add('server', $temp);
 

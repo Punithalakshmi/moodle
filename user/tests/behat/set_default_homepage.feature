@@ -18,11 +18,11 @@ Feature: Set the site home page and dashboard as the default home page
     And I follow "Make this my default home page"
     And I should not see "Make this my default home page"
     And I follow "Course 1"
-    And "Home" "text" should exist in the ".breadcrumb-nav" "css_element"
+    And "//ul[@class='breadcrumb']/li/a[text()='Home']" "xpath_element" should exist
     And I am on site homepage
     And I follow "Dashboard"
     And I follow "Make this my default home page"
     And I should not see "Make this my default home page"
     And I am on site homepage
     When I follow "Course 1"
-    Then "Dashboard" "text" should exist in the ".breadcrumb-nav" "css_element"
+    Then "//ul[@class='breadcrumb']/li/a[text()='Dashboard']" "xpath_element" should exist

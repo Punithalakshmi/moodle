@@ -235,7 +235,7 @@ class data_field_multimenu extends data_field_base {
         global $DB;
 
         if ($content = $DB->get_record('data_content', array('fieldid'=>$this->field->id, 'recordid'=>$recordid))) {
-            if (strval($content->content) === '') {
+            if (empty($content->content)) {
                 return false;
             }
 

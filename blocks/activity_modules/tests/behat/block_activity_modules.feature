@@ -4,6 +4,11 @@ Feature: Block activity modules
   As a manager
   I can add activities block in a course or on the frontpage
 
+  Background:
+    Given I log in as "admin"
+    And I navigate to "Manage activities" node in "Site administration > Plugins > Activity modules"
+    And I click on "//a[@title=\"Show\"]" "xpath_element" in the "Feedback" "table_row"
+
   Scenario: Add activities block on the frontpage
     Given the following "activities" exist:
       | activity   | name                        | intro                              | course               | idnumber    |
@@ -29,9 +34,8 @@ Feature: Block activity modules
       | wiki       | Frontpage wiki name         | Frontpage wiki description         | Acceptance test site | wiki0       |
       | workshop   | Frontpage workshop name     | Frontpage workshop description     | Acceptance test site | workshop0   |
 
-    When I log in as "admin"
     And I am on site homepage
-    And I follow "Turn editing on"
+    When I follow "Turn editing on"
     And I add the "Activities" block
     And I click on "Assignments" "link" in the "Activities" "block"
     Then I should see "Frontpage assignment name"
@@ -108,8 +112,7 @@ Feature: Block activity modules
       | wiki       | Test wiki name         | Test wiki description         | C1     | wiki1       |
       | workshop   | Test workshop name     | Test workshop description     | C1     | workshop1   |
 
-    When I log in as "admin"
-    And I follow "Courses"
+    When I follow "Courses"
     And I follow "Course 1"
     And I turn editing mode on
     And I add the "Activities" block

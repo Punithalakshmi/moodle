@@ -65,6 +65,21 @@
             vertical-align: text-bottom;
         }
 
+        .editing_move {
+            /* Move the move icon to the start of the line */
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .mod-indent-outer {
+            /**
+             * Add appropriate padding such that nothing overlaps the
+             * absolute positioned move icon.
+             */
+            padding-left: 32px;
+        }
+
         /* The command block for each activity */
         .actions {
             position: absolute;
@@ -142,6 +157,15 @@
             right: 100%;
         }
 
+        .mod-indent-outer {
+            /**
+             * Add appropriate padding such that nothing overlaps the
+             * absolute positioned move icon.
+             */
+            padding-left: initial;
+            padding-right: 32px;
+        }
+
         /* The command block for each activity */
         .actions {
             left: 0;
@@ -158,6 +182,12 @@
 
 .dir-rtl .section {
     .activity {
+        .editing_move {
+            /* Move the move icon to the start of the line */
+            left: auto;
+            right: 0;
+        }
+
         &.editor_displayed {
             div.activityinstance {
                 padding-left: initial;
@@ -181,19 +211,6 @@
 .editing {
     .section {
         .activity {
-            .editing_move {
-                /* Move the move icon to the start of the line */
-                position: absolute;
-                left: 0;
-                top: 0;
-            }
-            .mod-indent-outer {
-                /**
-                * Add appropriate padding such that nothing overlaps the
-                * absolute positioned move icon.
-                */
-                padding-left: 32px;
-            }
             .contentwithoutlink,
             .activityinstance {
                 padding-right: 200px;
@@ -209,19 +226,6 @@
             .activityinstance {
                 padding-left: 200px;
                 padding-right: 0;
-            }
-           .editing_move {
-               /* Move the move icon to the start of the line */
-               left: auto;
-               right: 0;
-            }
-            .mod-indent-outer {
-                /**
-                 * Add appropriate padding such that nothing overlaps the
-                 * absolute positioned move icon.
-                 */
-                padding-left: 0px;
-                padding-right: 32px;
             }
         }
     }
@@ -510,6 +514,8 @@ span.editinstructions {
     z-index: 9999;
     .box-shadow(2px 2px 5px 1px #ccc);
     border: 1px solid @infoBorder;
+}
+.dir-rtl span.editinstructions {
 }
 
 /* Course drag and drop upload styles */

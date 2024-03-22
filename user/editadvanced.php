@@ -116,7 +116,10 @@ useredit_load_preferences($user);
 profile_load_data($user);
 
 // User interests.
-$user->interests = core_tag_tag::get_item_tags_array('core', 'user', $id);
+if (!empty($CFG->usetags)) {
+    require_once($CFG->dirroot.'/tag/lib.php');
+    $user->interests = tag_get_tags_array('user', $id);
+}
 
 if ($user->id !== -1) {
     $usercontext = context_user::instance($user->id);
@@ -233,7 +236,7 @@ if ($usernew = $userform->get_data()) {
     useredit_update_user_preference($usernew);
 
     // Update tags.
-    if (empty($USER->newadminuser) && isset($usernew->interests)) {
+    if (!empty($CFG->usetags) and empty($USER->newadminuser)) {
         useredit_update_interests($usernew, $usernew->interests);
     }
 

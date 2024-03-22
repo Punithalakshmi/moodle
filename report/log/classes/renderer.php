@@ -167,7 +167,7 @@ class report_log_renderer extends plugin_renderer_base {
         // Add edulevel.
         $edulevel = $reportlog->get_edulevel_options();
         echo html_writer::label(get_string('edulevel'), 'menuedulevel', false, array('class' => 'accesshide'));
-        echo html_writer::select($edulevel, 'edulevel', $reportlog->edulevel, false).$this->help_icon('edulevel');
+        echo html_writer::select($edulevel, 'edulevel', $reportlog->edulevel, false);
 
         // Add reader option.
         // If there is some reader available then only show submit button.

@@ -19,14 +19,14 @@ Feature: Managers can create courses
     And I log out
     When I log in as "teacher1"
     And I follow "Course 1"
-    Then "Latest announcements" "block" should exist
-    And I follow "Announcements"
+    Then "Latest news" "block" should exist
+    And I follow "News forum"
     And "Add a new topic" "button" should exist
     And "Forced subscription" "link" should not exist
     And I log out
     And I log in as "student1"
     And I follow "Course 1"
-    And I follow "Announcements"
+    And I follow "News forum"
     And "Add a new topic" "button" should not exist
     And I should see "Forced subscription" in the "Administration" "block"
 

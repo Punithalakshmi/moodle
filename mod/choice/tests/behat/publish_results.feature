@@ -20,6 +20,7 @@ Feature: A teacher can choose one of 4 options for publishing choice results
     And I follow "Course 1"
     And I turn editing mode on
 
+  @javascript
   Scenario: Do not publish results to students
     Given I add a "Choice" to section "1" and I fill the form with:
       | Choice name | Choice 1 |
@@ -35,6 +36,7 @@ Feature: A teacher can choose one of 4 options for publishing choice results
     And I should not see "Responses"
     And I should not see "Graph display"
 
+  @javascript
   Scenario: Show results to students after they answer
     Given I add a "Choice" to section "1" and I fill the form with:
       | Choice name | Choice 1 |
@@ -54,6 +56,7 @@ Feature: A teacher can choose one of 4 options for publishing choice results
     And I should see "Responses"
     And I should see "Graph display"
 
+  @javascript
   Scenario: Show results to students only after the choice is closed
     Given I add a "Choice" to section "1" and I fill the form with:
       | Choice name | Choice 1 |
@@ -76,11 +79,6 @@ Feature: A teacher can choose one of 4 options for publishing choice results
     And I expand all fieldsets
     And I set the following fields to these values:
       | Restrict answering to this time period | 1 |
-      | timeopen[day] | 1 |
-      | timeopen[month] | January |
-      | timeopen[year] | 2010 |
-      | timeclose[day] | 2 |
-      | timeclose[month] | January |
       | timeclose[year] | 2010 |
     And I press "Save and return to course"
     And I log out
@@ -90,6 +88,7 @@ Feature: A teacher can choose one of 4 options for publishing choice results
     And I should see "Responses"
     And I should see "Graph display"
 
+  @javascript
   Scenario: Always show results to students
     Given I add a "Choice" to section "1" and I fill the form with:
       | Choice name | Choice 1 |

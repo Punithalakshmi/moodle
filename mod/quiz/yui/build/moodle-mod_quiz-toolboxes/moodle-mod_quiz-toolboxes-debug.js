@@ -1,6 +1,5 @@
 YUI.add('moodle-mod_quiz-toolboxes', function (Y, NAME) {
 
-/* eslint-disable no-unused-vars */
 /**
  * Resource and activity toolbox class.
  *
@@ -221,8 +220,6 @@ Y.extend(TOOLBOX, Y.Base, {
     }
 }
 );
-/* global TOOLBOX, BODY, SELECTOR */
-
 /**
  * Resource and activity toolbox class.
  *
@@ -682,8 +679,6 @@ M.mod_quiz.init_resource_toolbox = function(config) {
     M.mod_quiz.resource_toolbox = new RESOURCETOOLBOX(config);
     return M.mod_quiz.resource_toolbox;
 };
-/* global TOOLBOX, BODY, SELECTOR */
-
 /**
  * Section toolbox class.
  *

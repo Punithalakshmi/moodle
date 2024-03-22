@@ -77,6 +77,18 @@ $stremaildigest  = get_string('emaildigest');
 
 $searchform = forum_search_form($course);
 
+// Retrieve the list of forum digest options for later.
+$digestoptions = forum_get_user_digest_options();
+$digestoptions_selector = new single_select(new moodle_url('/mod/forum/maildigest.php',
+    array(
+        'backtoindex' => 1,
+    )),
+    'maildigest',
+    $digestoptions,
+    null,
+    '');
+$digestoptions_selector->method = 'post';
+
 // Start of the table for General Forums
 
 $generaltable = new html_table();
@@ -103,18 +115,6 @@ if ($can_subscribe) {
 
     $generaltable->head[] = $stremaildigest . ' ' . $OUTPUT->help_icon('emaildigesttype', 'mod_forum');
     $generaltable->align[] = 'center';
-
-    // Retrieve the list of forum digest options for later.
-    $digestoptions = forum_get_user_digest_options();
-    $digestoptions_selector = new single_select(new moodle_url('/mod/forum/maildigest.php',
-        array(
-            'backtoindex' => 1,
-        )),
-        'maildigest',
-        $digestoptions,
-        null,
-        '');
-    $digestoptions_selector->method = 'post';
 }
 
 if ($show_rss = (($can_subscribe || $course->id == SITEID) &&
@@ -174,13 +174,8 @@ foreach ($modinfo->get_instances_of('forum') as $forumid=>$cm) {
 // Do course wide subscribe/unsubscribe if requested
 if (!is_null($subscribe)) {
     if (isguestuser() or !$can_subscribe) {
-        // There should not be any links leading to this place, just redirect.
-        redirect(
-                new moodle_url('/mod/forum/index.php', array('id' => $id)),
-                get_string('subscribeenrolledonly', 'forum'),
-                null,
-                \core\output\notification::NOTIFY_ERROR
-            );
+        // there should not be any links leading to this place, just redirect
+        redirect(new moodle_url('/mod/forum/index.php', array('id' => $id)), get_string('subscribeenrolledonly', 'forum'));
     }
     // Can proceed now, the user is not guest and is enrolled
     foreach ($modinfo->get_instances_of('forum') as $forumid=>$cm) {
@@ -209,19 +204,9 @@ if (!is_null($subscribe)) {
     $returnto = forum_go_back_to(new moodle_url('/mod/forum/index.php', array('id' => $course->id)));
     $shortname = format_string($course->shortname, true, array('context' => context_course::instance($course->id)));
     if ($subscribe) {
-        redirect(
-                $returnto,
-                get_string('nowallsubscribed', 'forum', $shortname),
-                null,
-                \core\output\notification::NOTIFY_SUCCESS
-            );
+        redirect($returnto, get_string('nowallsubscribed', 'forum', $shortname), 1);
     } else {
-        redirect(
-                $returnto,
-                get_string('nowallunsubscribed', 'forum', $shortname),
-                null,
-                \core\output\notification::NOTIFY_SUCCESS
-            );
+        redirect($returnto, get_string('nowallunsubscribed', 'forum', $shortname), 1);
     }
 }
 
@@ -245,7 +230,7 @@ if ($generalforums) {
                 } else if ($unread = forum_tp_count_forum_unread_posts($cm, $course)) {
                         $unreadlink = '<span class="unread"><a href="view.php?f='.$forum->id.'">'.$unread.'</a>';
                     $unreadlink .= '<a title="'.$strmarkallread.'" href="markposts.php?f='.
-                                   $forum->id.'&amp;mark=read&amp;sesskey=' . sesskey() . '"><img src="'.$OUTPUT->pix_url('t/markasread') . '" alt="'.$strmarkallread.'" class="iconsmall" /></a></span>';
+                                   $forum->id.'&amp;mark=read"><img src="'.$OUTPUT->pix_url('t/markasread') . '" alt="'.$strmarkallread.'" class="iconsmall" /></a></span>';
                 } else {
                     $unreadlink = '<span class="read">0</span>';
                 }
@@ -383,7 +368,7 @@ if ($course->id != SITEID) {    // Only real courses have learning forums
                     } else if ($unread = forum_tp_count_forum_unread_posts($cm, $course)) {
                         $unreadlink = '<span class="unread"><a href="view.php?f='.$forum->id.'">'.$unread.'</a>';
                         $unreadlink .= '<a title="'.$strmarkallread.'" href="markposts.php?f='.
-                                       $forum->id.'&amp;mark=read&sesskey=' . sesskey() . '"><img src="'.$OUTPUT->pix_url('t/markasread') . '" alt="'.$strmarkallread.'" class="iconsmall" /></a></span>';
+                                       $forum->id.'&amp;mark=read"><img src="'.$OUTPUT->pix_url('t/markasread') . '" alt="'.$strmarkallread.'" class="iconsmall" /></a></span>';
                     } else {
                         $unreadlink = '<span class="read">0</span>';
                     }
